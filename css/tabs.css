@@ -1,0 +1,71 @@
+.tabs {
+    border: 1px solid var(--paneBorderColor);
+    background-color: var(--paneHeaderColor);
+    overflow: hidden;
+}
+
+.tabs button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    transition: 0.3s;
+    font-size: 1em;
+}
+
+.tabsRight button {
+    float: right !important;
+}
+
+.tabs button:hover {
+    background-color: var(--hoverTabColor);
+}
+
+.tabs button.active {
+    background-color: var(--activeTabColor);
+}
+
+.activeTab {
+    display: block;
+}
+
+.inactiveTab {
+    display: none;
+}
+
+.tabContent {
+    border: 1px solid var(--paneBorderColor);
+    border-top: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 1em;
+}
+
+.subtabs {
+    border: 0 !important;
+    background-color: inherit !important;
+    overflow: auto !important;
+    margin-top: 0.5em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: center;
+    align-content: center;
+}
+
+.subtabs a {
+    flex: 0 1 auto;
+    color: var(--textColor);
+}
+
+.subtabs a:hover {
+    text-decoration: underline;
+}
+
+.subtabs .active,
+.subtabs a:active {
+    text-decoration: underline !important;
+}

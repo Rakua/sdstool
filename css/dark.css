@@ -1,0 +1,25 @@
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --backgroundColor: #1c1b22;
+    --textColor: #f1f1f1;
+    --linkColor: #007ffe;
+    --linkHoverColor: #0062c3;
+
+    --errorColor: red;
+    --warningColor: rgb(218, 116, 0);
+    --cmdColor: rgb(4, 113, 255);
+
+    --paneBorderColor: #4d4b55;
+    --paneHeaderColor: #313039;
+    --activeTabColor: #514f5b;
+    --hoverTabColor: #403e4b;
+    --overlayColor: rgba(0, 0, 0, 0.75);
+
+    --oddRowColor: rgb(20, 19, 24);
+    --hoverRowColor: #0a0a0d;
+
+    --verifyValidColor: rgba(0, 98, 15, 0.3);
+    --verifyInvalidColor: rgb(82, 0, 0, 0.3);
+    --verifyIllegalColor: rgb(100, 100, 0, 0.3);
+    --verifyUnverifiableColor: #1c1c1c;
+}

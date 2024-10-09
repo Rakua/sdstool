@@ -1,0 +1,56 @@
+<!--
+ Example of how to send sign requests to SDSTool (plain text or JSON sign requests)
+ and receive the signed result. 
+-->
+
+<html>
+
+<head>
+    <script>
+        const hostname = "localhost:8045"
+
+        //send sign request
+        function sign() {
+            const data = document.getElementById("signData").value
+            const callback = "http://" + hostname + "/example_redirect.html#X"
+            const acceptedAlgs = ["secp256k1", "ed25519", "xx", "ed448"] //unknown algs are filtered by sdstool
+            const acceptedDms = ["sha512", "BLAke2s256", "yy"]
+
+            const obj = {
+                "callback": callback, //url that is called when "Send to" is clicked in SDSTool
+                "data": document.getElementById("signData").value,
+                "acceptedAlgorithms": acceptedAlgs, //optional, can be used to specify accepted algs for plain text format
+                "acceptedDigestMethods": acceptedDms //optional, can be used to specify accepted dms for plain text format            
+            }
+            window.open("http://" + hostname + "/#S" + encodeURIComponent(JSON.stringify(obj)))
+        }
+
+        //send verify request
+        function verify() {
+            const data = document.getElementById("signData").value
+            //window.location.assign("http://localhost:8181/#V"+encodeURIComponent(data))
+            window.open("http://" + hostname + "/#V" + encodeURIComponent(data))
+        }
+
+        //receive signed sign request
+        function receive() {
+            const hashVal = window.location.hash
+            if(hashVal.startsWith("#X")) {
+                document.getElementById("signButton").disabled = true
+                document.getElementById("signData").value = decodeURIComponent(hashVal.slice(2))
+            }
+        }
+    </script>
+</head>
+
+<body onload="receive()">
+    <textarea id="signData" style="width:400px;height:200px;"></textarea><br>
+    <button id="signButton" onClick="sign()" style="font-size:1em">
+        Sign <img src="img/logo.svg" style="width:13px">
+    </button>
+    <button id="verifyButton" onClick="verify()" style="font-size:1em">
+        Verify <img src="img/logo.svg" style="width:13px">
+    </button>
+</body>
+
+</html>
