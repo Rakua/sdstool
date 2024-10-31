@@ -1,0 +1,121 @@
+.layout {
+    height: 100%;
+    display: grid;
+    grid-template-columns: var(--paneMargin) 3fr var(--paneMargin) 4fr var(--paneMargin);
+    grid-template-rows: min-content var(--paneMargin) min-content auto var(--paneMargin) var(--consoleHeight) var(--paneMargin);
+    grid-auto-columns: 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "header header header header header"
+        ". .              . .         ."
+        ". actionNavi     . dbNavi    ."
+        ". actionContent  . dbContent ."
+        ". .              . dbContent ."
+        ". consoleContent . dbContent ."
+        ". .              . .         .";
+}
+
+.layoutWoConsole {
+    height: 100%;
+    display: grid;
+    grid-template-columns: var(--paneMargin) 3fr var(--paneMargin) 4fr var(--paneMargin);
+    grid-template-rows: min-content var(--paneMargin) min-content auto var(--paneMargin);
+    grid-auto-columns: 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "header header header header header"
+        ". .             . .         ."
+        ". actionNavi    . dbNavi    ."
+        ". actionContent . dbContent ."
+        ". .             . .         .";
+}
+
+/* one column layout */
+@media (max-width: 1200px) {
+    .layout {
+        height: auto !important;
+        grid-template-columns: var(--paneMargin) auto var(--paneMargin) !important;
+        grid-template-rows: min-content var(--paneMargin) min-content auto var(--paneMargin) var(--consoleHeight) var(--paneMargin) min-content auto var(--paneMargin) !important;
+        grid-auto-columns: 1fr !important;
+        gap: 0px 0px !important;
+        grid-auto-flow: row !important;
+        grid-template-areas:
+            "header header header"
+            ". .              ."
+            ". actionNavi     ."
+            ". actionContent  ."
+            ". .              ."
+            ". consoleContent ."
+            ". .              ."
+            ". dbNavi         ."
+            ". dbContent      ."
+            ". .              ." !important;
+    }
+
+    .layoutWoConsole {
+        height: auto !important;
+        grid-template-columns: var(--paneMargin) auto var(--paneMargin) !important;
+        grid-template-rows: min-content var(--paneMargin) min-content auto var(--paneMargin) min-content min-content var(--paneMargin) !important;
+        grid-auto-columns: 1fr !important;
+        gap: 0px 0px !important;
+        grid-auto-flow: row !important;
+        grid-template-areas:
+            "header header header"
+            ". .             ."
+            ". actionNavi     ."
+            ". actionContent ."
+            ". .             ."
+            ". dbNavi        ."
+            ". dbContent     ."
+            ". .             ." !important;
+    }
+}
+
+.headerArea {
+    grid-area: header;
+}
+
+.actionNaviArea {
+    grid-area: actionNavi;
+}
+
+.actionContentArea {
+    grid-area: actionContent;
+}
+
+.dbNaviArea {
+    grid-area: dbNavi;
+}
+
+.dbContentArea {
+    grid-area: dbContent;
+}
+
+.consoleContentArea {
+    grid-area: consoleContent;
+}
+
+.header {
+    text-align: center;
+    font-size: 2em;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background-color: var(--paneHeaderColor);
+    border-bottom: 1px solid var(--paneBorderColor);
+}
+
+#logo {
+    height: 35px;
+    vertical-align: middle;
+}
+
+.consolePane {
+    background: var(--paneHeaderColor);
+    font-family: monospace;
+    padding: 3px;
+    padding-bottom: 15px;
+    overflow-y: auto;
+    border: 1px solid var(--paneBorderColor);
+}

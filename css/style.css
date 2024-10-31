@@ -1,0 +1,255 @@
+:root {
+    --paneMargin: 6px;
+    --consoleHeight: 10em;
+}
+
+* {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    min-width: 800px;
+    font-family: sans-serif;
+    color:var(--textColor);
+    background-color: var(--backgroundColor);
+}
+
+.smallFontSize {
+    font-size: 0.8em;
+}
+
+.emoji {
+    font-family: "Noto Color Emoji", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+a {
+    color: var(--linkColor);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a:hover {
+    color: var(--linkHoverColor);
+}
+
+sup[onclick] {
+    cursor: pointer;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.center {
+    text-align: center;
+}
+
+.monospace {
+    font-family: monospace;
+}
+
+.consoleError {
+    color: var(--errorColor);
+}
+
+.consoleWarning {
+    color: var(--warningColor);
+}
+
+.consoleCmd {
+    color: var(--cmdColor);
+}
+
+.noLineWrap {
+    white-space: pre;
+}
+
+.form {
+    padding: 0.5em;
+}
+
+.form label {
+    display: block;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    width: 90%;
+}
+
+.formCheckbox {
+    display: block;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    width: 90%;
+}
+
+.formCheckbox label,
+.formCheckbox input {
+    display: inline !important;
+    width: auto !important;
+}
+
+.form details {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    width: 100%;
+}
+
+.form summary {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    width: 90%;
+}
+
+.form input,
+.form select,
+.form textarea {
+    width: 90%;
+    padding: 3px;
+}
+
+.form textarea {
+    height: 5.5em;
+}
+
+.form .error {
+    float: right;
+    color: var(--errorColor);
+    display: none;
+}
+
+.form .submit {
+    text-align: center;
+    padding-top: 1em;
+}
+
+.form button {
+    padding: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.form .inputLike,
+.form .textareaLike {
+    width: 90%;
+    padding: 3px;
+    border: 1px solid var(--paneBorderColor);
+    border-radius: 3px;
+    overflow-wrap: anywhere;
+    font-size: 0.9em;
+}
+
+.form .textareaLike {
+    overflow-wrap: anywhere;
+}
+
+.help {
+    padding: 0.5em;
+    padding-top: 1em;
+}
+
+.help details {
+    padding-bottom: 1em;
+}
+
+.help details>summary {
+    padding: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.help details>p,
+.help details>pre {
+    padding: 0.5em;
+    margin: 0;
+    text-align: justify;
+}
+
+.help details>pre {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    /*background-color: #fafafa;*/
+}
+
+.help details>ul {
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.dbButtons,
+.dbPassword {
+    margin-top: 1em;
+    text-align: center;
+}
+
+.dbButtons button,
+.dbPassword button {
+    text-align: center;
+    padding: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.output {
+    margin-top: 1em;
+    border-top: 1px dashed var(--paneBorderColor);
+    padding-top: 0.5em;
+}
+
+.clearOutput {
+    font-size: 0.8em;
+    padding-bottom: 0.5em;
+    padding-right: 0.5em;
+    text-align: right;
+}
+
+.outputMessage {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+.blockingOverlay {
+    position: fixed;
+    display: none;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--overlayColor);
+    z-index: 2;
+}
+
+.passwordPrompt {
+    position: fixed;
+    padding: 1em;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 370px;
+    border: 1px solid var(--paneBorderColor);
+    background-color: var(--backgroundColor);
+}
+
+.loadingMessage {
+    position: fixed;
+    padding: 1em;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    border: 1px solid var(--paneBorderColor);
+    background-color:  var(--backgroundColor);
+}

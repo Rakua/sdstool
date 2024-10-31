@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>SDSTool</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta name="description" content="SDSTool is an open-source program for digital signatures that runs in your browser. It can be used for generating key pairs, signing and verifying signatures.">
+
+    <link href="css/jquery.dataTables-1.13.8.min.css" rel="stylesheet">
+    <!-- https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css -->
+    <link href="css/light.css" rel="stylesheet">
+    <link href="css/dark.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/layout.css" rel="stylesheet">
+    <link href="css/table.css" rel="stylesheet">
+    <link href="css/tabs.css" rel="stylesheet">
+
+    <script src="js/libs/jquery-3.7.1.slim.min.js"></script>
+    <!-- https://code.jquery.com/jquery-3.7.1.slim.min.js -->
+    <script src="js/libs/jquery.dataTables-1.13.8.min.js"></script>
+    <!-- https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js -->
+    <script src="js/libs/webterm-b304a23.bundle.js"></script>
+    <script src="js/libs/xterm-b304a23.js"></script>
+
+    <script src="js/misc.js"></script>
+
+    <script src="js/backend/WasmWrapper.js"></script>
+    <script src="js/backend/AlgorithmNames.js"></script>
+    <script src="js/backend/KeyDatabase.js"></script>
+    <script src="js/backend/SDSTool.js"></script>
+
+    <script src="js/frontend/Storage.js"></script>
+    <script src="js/frontend/GUI.js"></script>
+    <script src="js/frontend/Console.js"></script>
+    <script src="js/frontend/Database.js"></script>
+    <script src="js/frontend/Keys.js"></script>
+    <script src="js/frontend/Sign.js"></script>
+    <script src="js/frontend/Verify.js"></script>
+    <script src="js/frontend/Settings.js"></script>
+
+    <script src="js/main.js"></script>
+</head>
+
+<body>
+    <div id="layout" class="layout">
+        <div id="header" class="header headerArea"><img src="img/logo-0e.svg" id="logo">SDSTool</div>
+
+        <!-- action pane-->
+        <div id="actionNavi" class="actionNaviArea tabs">
+            <button name="keys"><span class="emoji">🪪</span> Keys</button>
+            <button name="sign"><span class="emoji">✒️</span> Sign</button>
+            <button name="verify"><span class="emoji">🧐</span> Verify</button>
+            <button name="settings"><span class="emoji">⚙️</span> Settings</button>
+            <button name="help"><span class="emoji">❓</span> Help</button>
+        </div>
+        <div class="actionContentArea tabContent">
+            <div id="keys">
+                <div id="keysNavi" class="tabs subtabs">
+                    <a name="generateKey">Generate</a>
+                    <a name="addKey">Add</a>
+                    <a name="viewKey">View</a>
+                </div>
+                <div id="generateKey">
+                    <div class="form">
+                        <label for="generateAlias">Alias</label>
+                        <input id="generateAlias" type="text" placeholder="Alias (optional)">
+
+                        <label for="generateAlgorithm">Algorithm<div class="error">Select an algorithm</div></label>
+                        <select id="generateAlgorithm">
+                            <option value="">-- Recommended algorithms --</option>
+                            <option value="ed25519" selected>ed25519 (high security level, very fast)</option>
+                            <option value="ed448">ed448 (very high security level)</option>
+                            <option value="">-- Other algorithms --</option>
+                            <option value="secp256k1">secp256k1 (used by Bitcoin &amp; Ethereum)</option>
+                            <option value="brainpoolP160r1">brainpoolP160r1</option>
+                            <option value="brainpoolP160t1">brainpoolP160t1</option>
+                            <option value="brainpoolP192r1">brainpoolP192r1</option>
+                            <option value="brainpoolP192t1">brainpoolP192t1</option>
+                            <option value="brainpoolP224r1">brainpoolP224r1</option>
+                            <option value="brainpoolP224t1">brainpoolP224t1</option>
+                            <option value="brainpoolP256r1">brainpoolP256r1</option>
+                            <option value="brainpoolP256t1">brainpoolP256t1</option>
+                            <option value="brainpoolP320r1">brainpoolP320r1</option>
+                            <option value="brainpoolP320t1">brainpoolP320t1</option>
+                            <option value="brainpoolP384r1">brainpoolP384r1</option>
+                            <option value="brainpoolP384t1">brainpoolP384t1</option>
+                            <option value="brainpoolP512r1">brainpoolP512r1</option>
+                            <option value="brainpoolP512t1">brainpoolP512t1</option>
+                            <option value="c2pnb163v1">c2pnb163v1</option>
+                            <option value="c2pnb163v2">c2pnb163v2</option>
+                            <option value="c2pnb163v3">c2pnb163v3</option>
+                            <option value="c2pnb176v1">c2pnb176v1</option>
+                            <option value="c2pnb208w1">c2pnb208w1</option>
+                            <option value="c2pnb272w1">c2pnb272w1</option>
+                            <option value="c2pnb304w1">c2pnb304w1</option>
+                            <option value="c2pnb368w1">c2pnb368w1</option>
+                            <option value="c2tnb191v1">c2tnb191v1</option>
+                            <option value="c2tnb191v2">c2tnb191v2</option>
+                            <option value="c2tnb191v3">c2tnb191v3</option>
+                            <option value="c2tnb239v1">c2tnb239v1</option>
+                            <option value="c2tnb239v2">c2tnb239v2</option>
+                            <option value="c2tnb239v3">c2tnb239v3</option>
+                            <option value="c2tnb359v1">c2tnb359v1</option>
+                            <option value="c2tnb431r1">c2tnb431r1</option>
+                            <option value="prime192v1">prime192v1</option>
+                            <option value="prime192v2">prime192v2</option>
+                            <option value="prime192v3">prime192v3</option>
+                            <option value="prime239v1">prime239v1</option>
+                            <option value="prime239v2">prime239v2</option>
+                            <option value="prime239v3">prime239v3</option>
+                            <option value="prime256v1">prime256v1</option>
+                            <option value="rsa1024">rsa1024</option>
+                            <option value="rsa1536">rsa1536</option>
+                            <option value="rsa2048">rsa2048</option>
+                            <option value="rsa3072">rsa3072</option>
+                            <option value="rsa4096">rsa4096</option>
+                            <option value="rsa7680">rsa7680</option>
+                            <option value="rsa8192">rsa8192</option>
+                            <option value="rsa15360">rsa15360</option>
+                            <option value="rsa16384">rsa16384</option>
+                            <option value="secp112r1">secp112r1</option>
+                            <option value="secp112r2">secp112r2</option>
+                            <option value="secp128r1">secp128r1</option>
+                            <option value="secp128r2">secp128r2</option>
+                            <option value="secp160k1">secp160k1</option>
+                            <option value="secp160r1">secp160r1</option>
+                            <option value="secp160r2">secp160r2</option>
+                            <option value="secp192k1">secp192k1</option>
+                            <option value="secp224k1">secp224k1</option>
+                            <option value="secp224r1">secp224r1</option>
+                            <!--<option value="secp256k1">secp256k1</option>-->
+                            <option value="secp384r1">secp384r1</option>
+                            <option value="secp521r1">secp521r1</option>
+                            <option value="sect113r1">sect113r1</option>
+                            <option value="sect113r2">sect113r2</option>
+                            <option value="sect131r1">sect131r1</option>
+                            <option value="sect131r2">sect131r2</option>
+                            <option value="sect163k1">sect163k1</option>
+                            <option value="sect163r1">sect163r1</option>
+                            <option value="sect163r2">sect163r2</option>
+                            <option value="sect193r1">sect193r1</option>
+                            <option value="sect193r2">sect193r2</option>
+                            <option value="sect233k1">sect233k1</option>
+                            <option value="sect233r1">sect233r1</option>
+                            <option value="sect239k1">sect239k1</option>
+                            <option value="sect283k1">sect283k1</option>
+                            <option value="sect283r1">sect283r1</option>
+                            <option value="sect409k1">sect409k1</option>
+                            <option value="sect409r1">sect409r1</option>
+                            <option value="sect571k1">sect571k1</option>
+                            <option value="sect571r1">sect571r1</option>
+                            <option value="wap-wsg-idm-ecid-wtls1">wap-wsg-idm-ecid-wtls1</option>
+                            <option value="wap-wsg-idm-ecid-wtls10">wap-wsg-idm-ecid-wtls10</option>
+                            <option value="wap-wsg-idm-ecid-wtls11">wap-wsg-idm-ecid-wtls11</option>
+                            <option value="wap-wsg-idm-ecid-wtls12">wap-wsg-idm-ecid-wtls12</option>
+                            <option value="wap-wsg-idm-ecid-wtls3">wap-wsg-idm-ecid-wtls3</option>
+                            <option value="wap-wsg-idm-ecid-wtls4">wap-wsg-idm-ecid-wtls4</option>
+                            <option value="wap-wsg-idm-ecid-wtls5">wap-wsg-idm-ecid-wtls5</option>
+                            <option value="wap-wsg-idm-ecid-wtls6">wap-wsg-idm-ecid-wtls6</option>
+                            <option value="wap-wsg-idm-ecid-wtls7">wap-wsg-idm-ecid-wtls7</option>
+                            <option value="wap-wsg-idm-ecid-wtls8">wap-wsg-idm-ecid-wtls8</option>
+                            <option value="wap-wsg-idm-ecid-wtls9">wap-wsg-idm-ecid-wtls9</option>
+                        </select>
+
+                        <div>
+                            <label for="generateKeyRngSeed">RNG seed material</label>
+                            <textarea id="generateKeyRngSeed" placeholder="Enter random string here (optional)"
+                                class="monospace"></textarea>
+                        </div>
+
+                        <div class="submit"><button id="generateKeyPairButton">Generate key pair</button></div>
+                    </div>
+                    <div class="output"></div>
+                </div>
+                <div id="addKey" class="form">
+                    <div class="form">
+                        <label for="addKeyAlias">Alias</label>
+                        <input type="text" id="addKeyAlias" placeholder="Alias (optional)" spellcheck="false">
+                        <label for="addKeyKey">Public key / Private key / JSON key</label>
+                        <textarea id="addKeyKey" placeholder="Public or private key in PEM format,
+multiple keys separated by two newlines or
+a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="false" style="height:10em"></textarea>
+
+                        <div class="formCheckbox" style="margin-top:1em !important;">
+                            <input type="checkbox" id="addKeyOverwriteFlag">
+                            <label for="addKeyOverwriteFlag" title="If KeyId already exists, overwrite it">Overwrite
+                                existing key(s)</label>
+                        </div>
+
+                        <div class="submit"><button id="addKeyButton">Add key</button></div>
+                    </div>
+                    <div class="output"></div>
+                </div>
+                <div id="viewKey" class="form">
+
+                    <label for="viewKeyAlias">Alias</label>
+                    <input type="text" id="viewKeyAlias" readonly>
+
+                    <label for="viewKeyKid">KeyId</label>
+                    <input type="text" id="viewKeyKid" class="monospace" readonly>
+
+                    <label for="viewKeyAlgorithm">Algorithm</label>
+                    <input type="text" id="viewKeyAlgorithm" readonly>
+
+                    <label for="viewKeyCreated">Added on</label>
+                    <input id="viewKeyCreated" type="text" readonly>
+
+                    <label for="viewKeyPublicKey">Public key</label>
+                    <textarea id="viewKeyPublicKey" class="monospace" spellcheck="false" readonly></textarea>
+
+                    <details id="viewKeyPrivateKeyDetails">
+                        <summary>Private key</summary>
+                        <textarea id="viewKeyPrivateKey" class="monospace" spellcheck="false" readonly></textarea>
+                    </details>
+
+                    <details>
+                        <summary>JSON Key</summary>
+                        <textarea id="viewKeyRaw" class="monospace noLineWrap" style="height:12em;" spellcheck="false"
+                            readonly></textarea>
+                    </details>
+
+                    <div class="submit"><button id="viewKeyButton">Clear</button></div>
+                </div>
+            </div>
+            <div id="sign">
+                <div class="form">
+                    <label for="signData">Data to sign
+                        <div class="error" id="signErrInvalidJsonSr">Invalid JSON sign request<sup>?</sup></div>
+                        <div class="error" id="signErrNoAcceptedKey">No key with accepted algorithm exists</div>
+                        <div class="error" id="signErrRequestedKeysMissing">Requested signing key(s) not in database
+                        </div>
+                    </label>
+                    <textarea id="signData" placeholder="Plain text or JSON sign request" style="height:10em"
+                        class="monospace noLineWrap" spellcheck="false"></textarea>
+
+                    <div>
+                        <label for="signSigningKey">Signing key</label>
+                        <select id="signSigningKey"></select>
+                    </div>
+
+                    <div>
+                        <label for="signDigestMethod"
+                            title="Only applies to key pairs with algorithms other than ed448 and ed25519">Digest
+                            method</label>
+                        <select id="signDigestMethod"></select>
+                    </div>
+
+                    <div>
+                        <label for="signRngSeed">RNG seed material</label>
+                        <textarea id="signRngSeed" placeholder="Enter random string here (optional)" class="monospace"
+                            spellcheck="false"></textarea>
+                    </div>
+
+                    <div class="formCheckbox" id="signAdvancedOptions" style="margin-top:1em !important;">
+                        <span>
+                            <input type="checkbox" id="settingsSignWithKeyId">
+                            <label for="settingsSignWithKeyId"
+                                title="The KeyId instead of the public key is used for signing. Only people who already know your public key can verify such a signature.">Sign
+                                with KeyId</label>
+                        </span>
+
+                        <span style="padding-left:1em">
+                            <input type="checkbox" id="signAsPlainText">
+                            <label for="signAsPlainText" title="Use this to sign a JSON sign request as plain text">Sign
+                                as plain text</label>
+                        </span>
+                    </div>
+
+                    <div class="submit">
+                        <button id="signButton">Sign</button>
+                        <button id="signCopyButton">Copy</button>
+                    </div>
+                </div>
+                <div class="output"></div>
+            </div>
+            <div id="verify">
+                <div class="form">
+                    <label for="verifyData">Data to verify</label>
+                    <textarea id="verifyData" placeholder="Plain text or JSON sign request" style="height:10em"
+                        class="monospace noLineWrap" spellcheck="false"></textarea>
+
+                    <div class="formCheckbox" id="verifyAdvancedOptions" style="margin-top:1em !important;">
+                        <input type="checkbox" id="verifyShowJsonResult">
+                        <label for="verifyShowJsonResult">Show result as JSON</label>
+                    </div>
+
+                    <div class="submit"><button id="verifyButton">Verify</button></div>
+                </div>
+                <div class="output"></div>
+            </div>
+            <div id="settings">
+                <div class="form">
+                    <div class="formCheckbox">
+                        <input type="checkbox" id="settingsUseDarkTheme">
+                        <label for="settingsUseDarkTheme">Use dark theme</label>
+                    </div>
+
+                    <div class="formCheckbox">
+                        <input type="checkbox" id="settingsShowConsole">
+                        <label for="settingsShowConsole"
+                            title="Displays a console showing what commands are sent to OpenSSL and some more info. Its visibility can also be toggled via the shortcut Alt+Q">Show
+                            console</label>
+                    </div>
+
+                    <div class="formCheckbox">
+                        <input type="checkbox" id="settingsWarnBeforeDeletingKey">
+                        <label for="settingsWarnBeforeDeletingKey">Warn before deleting a key</label>
+                    </div>
+
+                    <div class="formCheckbox">
+                        <input type="checkbox" id="settingsWarnBeforeLeaving">
+                        <label for="settingsWarnBeforeLeaving"
+                            title="Browser asks you when you try to leave or refresh this page. Recommended to prevent accidental loss of data">Warn before leaving page</label>
+                    </div>
+
+                    <div class="formCheckbox">
+                        <input type="checkbox" id="settingsUseLocalStorage">
+                        <label for="settingsUseLocalStorage"
+                            title="If a password is set, the database is saved encrypted to the browser's local storage on every change.">Auto-save and load database</label>
+                    </div>
+
+                    <label for="settingsDateFormat"
+                        title="Format used to present dates in your database and when viewing keys">Date format</label>
+                    <select id="settingsDateFormat">
+                        <option value="locale">Locale</option>
+                        <option value="localeAlt">Locale Alt</option>
+                        <option value="gmt">GMT</option>
+                        <option value="iso">ISO</option>
+                    </select>
+
+                    <div class="formInput">
+                        <label for="settingsEntriesPerPage">Entries per page in database</label>
+                        <input type="text" placeholder="Number of entries per page" id="settingsEntriesPerPage"
+                            style="text-align:right">
+                    </div>
+
+                    <div>
+                        <details>
+                            <summary>More settings</summary>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsAutoFormatJson">
+                                <label for="settingsAutoFormatJson"
+                                    title="Formats JSON in Sign and Verify tab for better readability">Auto-format JSON</label>
+                            </div>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsShowAdvancedOptions">
+                                <label for="settingsShowAdvancedOptions">Show additional options in Sign and Verify
+                                    tab</label>
+                            </div>
+
+                            <div style="display:none" class="formCheckbox">
+                                <input type="checkbox" id="settingsClearRngSeedAfterUse">
+                                <label for="settingsClearRngSeedAfterUse">Clear RNG seed material after use</label>
+                            </div>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsCustomRngSeedMaterial">
+                                <label for="settingsCustomRngSeedMaterial"
+                                    title="Enables you to supply your own RNG seed material for key generation and signing.">Custom
+                                    RNG seed material</label>
+                            </div>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsChooseDigest">
+                                <label for="settingsChooseDigest"
+                                    title="Enables you to choose which hashing function to use for signing. If disabled, sha256 or an accepted digest method is used by default.">
+                                    Choose digest method for signing</label>
+                            </div>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsNormalizePlainText">
+                                <label for="settingsNormalizePlainText"
+                                    title="Shrinks consecutive whitespaces to single ones and removes leading and trailing whitespaces in every line.">Normalize
+                                    plain text before signing</label>
+                            </div>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsKeyIdPrefixPlainText">
+                                <label for="settingsKeyIdPrefixPlainText"
+                                    title="When signing plain text with a KeyId, only use the 12 characters of the KeyId as name in the signature.">Use
+                                    KeyId prefix for signing plain text</label>
+                            </div>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsAlwaysLoadLocalDb">
+                                <label for="settingsAlwaysLoadLocalDb"
+                                    title="If a database is in your local storage, it will try to load it and prompt you for a password on every page refresh. If this option is disabled then it will only ask you when you open a new tab or window.">Load database on every refresh</label>
+                            </div>
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsUseShortEndingPhrase">
+                                <label for="settingsUseShortEndingPhrase">Use short ending phrase</label>
+                            </div>
+
+                            <!--<div class="formCheckbox">
+                                <input type="checkbox" id="settingsAppendNewlinePlainText">
+                                <label for="settingsAppendNewlinePlainText">Append newline to plain text before
+                                    signing</label>
+                            </div>-->
+
+                            <!--<div class="formCheckbox">
+                                <input type="checkbox" id="settingsBreakAfterEndingPhrase">
+                                <label for="settingsBreakAfterEndingPhrase">Additional line break after ending
+                                    phrase</label>
+                            </div>-->
+
+                            <div class="formCheckbox">
+                                <input type="checkbox" id="settingsUseAutoPassword">
+                                <label for="settingsUseAutoPassword">Use password input by browser without
+                                    confirmation</label>
+                            </div>
+
+                            <div class="formInput">
+                                <label for="settingsRedirectUrl" title="If you prefer to use a self-hosted version of SDSTool, you can enter its URL here and all sign and verify requests will be redirected to your instance.">Redirect URL (empty = disabled)</label>
+                                <input type="text" placeholder="Redirect URL (e.g. http://localhost:8045)"
+                                    id="settingsRedirectUrl">
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="submit">
+                        <button id="resetSettings">Reset settings</button>
+                    </div>
+                </div>
+            </div>
+            <div id="help" class="help">
+                <details>
+                    <summary>What is SDSTool?</summary>
+                    <p>
+                        SDSTool (Simple Digital Signature Tool) is an open-source program for digital signatures that runs in your browser. It can be used for generating and managing key pairs, signing plain text and JSON sign requests as well as verifying signatures.
+                        Check out its <a href="https://repo.sdstool.app">repository</a> for more info.
+                    </p>
+                </details>
+
+                <details>
+                    <summary>What are digital signatures?</summary>
+                    <p>
+                        Digital signatures enable you to create identities that can be used independently of a third party. Consider a forum where you are required to create an account. Think of that account as an identity of yours. You need to log in whenever you want to post something under that identity. The forum is the third party required to cooperate in order for you to be able to use it.
+                    </p>
+
+                    <p>
+                        If your account is banned or the forum ceases to operate, you lose that identity. Moreover, anyone with access to the forum's database can manipulate your posts or write posts in your name. It is also not so easy to establish a single identity across different websites since each one usually has its own account system.
+                    </p>
+
+                    <p>
+                        Identities based on digital signatures don't have these problems. Such an identity consists of a public and a private key, which together are called a key pair. The public key is like the username of an account and the private key like the password. Unlike username and password which can be chosen independently, a key pair must be generated by a special algorithm. To post something using a key pair as identity, you sign it. Others can verify the signed post to confirm that it has been made by you. No third party is required.
+                    </p>
+
+                </details>
+
+                <details>
+                    <summary>For what can I use this?</summary>
+
+                    <p>
+                        You can sign your posts before submitting them to a platform. If a platform disables your account, you can still post under that identity anywhere else via your key pair. Additionally, you obtain an identity that can be recognized across platforms.
+                    </p>
+
+                    <p>
+                        You can share your public key with your friends so that even if you contact them from an unknown address, they can verify that the message is from you.
+                    </p>
+                </details>
+
+                <details>
+                    <summary>How to change the alias of a key?</summary>
+                    <p>
+                        Click on the alias that you want to change in the table and it becomes editable. Press enter or focus another element to save the change.
+                    </p>
+                </details>
+
+                <details>
+                    <summary>How to store a database in the browser?</summary>
+                    <p>
+                        Go to the Settings tab and and check that <i>Auto-save and load database</i> is enabled. After setting a password, your database will be automatically saved in your browser whenever you modify it. When you open this site you will be prompted for a password to load the database from your browser.
+                    </p>
+
+                    <p>
+                        Only one database can be saved in your browser. If a database is already saved in your browser, it will not be overwritten. You must delete it before a new database can be saved in your browser. If the <i>Delete</i> button is disabled, this means no database is stored in your browser.
+                    </p>
+                </details>
+
+                <details>
+                    <summary>What is a KeyId?</summary>
+                    <p>
+                        A KeyId is a short representation of a public key. It can be derived from the public key but not vice versa. This means you cannot verify a signed text that uses a KeyId for which you don't have the corresponding public key.
+                    </p>
+                </details>
+
+                <details>
+                    <summary>Keyboard shortcuts & tips</summary>
+                    <ul>
+                        <li><span style="font-family:monospace">Alt+Q</span> show/hide console</li>
+                        <li><span style="font-family:monospace">Alt+W</span> clear output messages in panes</li>
+                        <li><span style="font-family:monospace">Alt+P</span> opens the password dialog</li>
+                        <li><span style="font-family:monospace">Alt+G</span> generate 1000 keys when the Generate tab is open (you can use this to generate a key pair with a memorable KeyId)</li>
+                    </ul>
+                    <ul>
+                        <li>You can confirm your password by pressing enter</li>
+                        <li>On Firefox you can enable the option <i>Use password input by browser without confirmation</i> under Settings &gt; More settings to auto-load your database without having to press enter</li>
+                        <li>When the Sign tab is open and you click on 🔍 in the database pane, the respective key is selected for signing instead of viewing</li>
+                        <li>Hover over certain UI elements to see an explanation</li>
+                        <li>If some emojis are not displayed correctly in the navigation, install the font Noto Color Emoji</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+
+        <!-- db pane -->
+        <div id="dbNavi" class="dbNaviArea tabs tabsRight">
+            <input id="keyDatabaseName" class="keyDatabaseName" type="text">
+            <button name="othersKeys" title="Public keys from other people used to check if someone you know signed something">
+                <span class="emoji">👥</span>
+                Others' public keys (<span id="othersKeysCount">0</span>)
+            </button>
+            <button name="yourKeys" title="Your own key pairs that you can use to sign">
+                <span class="emoji">🙂</span>
+                Your key pairs (<span id="yourKeysCount">0</span>)
+            </button>
+        </div>
+        <div id="database" class="dbContentArea tabContent">
+            <div id="yourKeys">
+                <table id="yourKeysTable" class="keyTable hover stripe">
+                    <thead>
+                        <tr>
+                            <th>Alias</th> <!--0-->
+                            <th>PublicKey</th> <!--1-->
+                            <th>KeyId</th> <!--2-->
+                            <th>Algorithm</th> <!--3-->
+                            <th>Created</th> <!--4-->
+                            <th class="iconCol"></th> <!--5-->
+                            <th class="iconCol"></th> <!--6-->
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="othersKeys">
+                <table id="othersKeysTable" class="keyTable hover stripe">
+                    <thead>
+                        <tr>
+                            <th>Alias</th>
+                            <th>PublicKey</th>
+                            <th>KeyId</th>
+                            <th>Algorithm</th>
+                            <th>Added</th>
+                            <th class="iconCol"></th>
+                            <th class="iconCol"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="dbButtons">
+                <button id="dbSaveButton">Save</button>
+                <button id="dbLoadButton">Load</button>
+                <button id="dbNewButton">New</button>
+                <button id="dbSetPasswordButton">Set Password</button>
+                <button id="dbDeleteButton"
+                    title="Deletes database stored in your browser's local storage. This button is only active if one exists.">Delete</button>
+                <form id="dbLoadFileForm" style="display:none"><input type="file" id="dbLoadFile" style="display:none">
+                </form>
+            </div>
+            <div class="output"></div>
+        </div>
+
+        <!-- console pane -->
+        <div id="console" class="consoleContentArea consolePane">
+            *** Console (SDSTool Version <span id="sdstVersion"></span>) ***
+            <div style="float:right"><a id="consoleClear">Clear</a> · <a id="consoleHide">Hide</a></div>
+            <div id="consoleOut"></div>
+        </div>
+
+    </div>
+    <div id="xterm" style="display:none"></div>
+    <div id="passwordOverlay" class="blockingOverlay">
+        <div class="passwordPrompt form">
+            <label for="dbPassword">Set database password</label>
+            <input id="dbPassword" type="password" placeholder="Password (empty = unset)">
+            <div class="formCheckbox">
+                <input type="checkbox" id="showPassword">
+                <label for="showPassword">Show password</label>
+            </div>
+            <div class="submit">
+                <button id="passwordPromptOk">Ok</button>
+                <button id="passwordPromptCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="loadingOverlay" class="blockingOverlay" style="display:block !important;">
+        <div class="loadingMessage">SDSTool is loading, please wait.</div>
+    </div>
+    <div id="failedToLoadOverlay" class="blockingOverlay">
+        <div class="loadingMessage">SDSTool failed to load. Please open it again in a new tab.</div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+.keyDatabaseName {
+    float: left;
+    margin: 9px 6px;
+    font-size: 0.9em;
+    min-width: 200px;
+    width: 20em;
+    padding: 2px;
+    border: 0;
+    background-color: var(--paneHeaderColor);
+}
+
+.keyTable td {
+    font-family: monospace;
+}
+
+.dataTables_filter {
+    text-align: left !important;
+    float: left !important;
+    padding: 0.5em !important;
+}
+
+.keyTable {
+    width: 100% !important;
+    word-wrap: break-word;
+    border-top: 1px solid var(--paneBorderColor);
+    max-width: 100%;
+    /*white-space:nowrap;*/
+}
+
+.iconCol {
+    width: 25px !important;
+}
+
+table.dataTable thead>tr>th.sorting::before,
+table.dataTable thead>tr>th.sorting::after {
+    margin: 1.5px;
+}
+
+.verifyTable {
+    border-collapse: collapse;
+    border-top: 1px solid var(--paneBorderColor);
+    border-bottom: 1px solid var(--paneBorderColor);
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.verifyTable td,
+.verifyTable th {
+    border-top: 1px solid var(--paneBorderColor);
+    border-bottom: 1px solid var(--paneBorderColor);
+    padding: 0.7em;
+    text-align: left;
+}
+
+.verifyTable td {
+    font-size: 0.9em;
+    font-family: monospace;
+}
+
+.verifyTable .valid {
+    background-color: var(--verifyValidColor) !important;
+}
+
+.verifyTable .invalid {
+    background-color: var(--verifyInvalidColor) !important;
+}
+
+.verifyTable .illegal {
+    background-color: var(--verifyIllegalColor) !important;
+}
+
+.verifyTable .unverifiable {
+    background-color: var(--verifyUnverifiableColor) !important;
+}
+
+table.dataTable>thead>tr>th,
+table.dataTable>thead>tr>td,
+table.dataTable>tfoot>tr>th,
+table.dataTable>tfoot>tr>td,
+table.dataTable.no-footer {
+    border-bottom: 1px solid var(--paneBorderColor);
+}
+
+table.dataTable.stripe>tbody>tr.odd>*,
+table.dataTable.display>tbody>tr.odd>* {
+    box-shadow: inset 0 0 0 9999px var(--oddRowColor);
+}
+
+table.dataTable.hover>tbody>tr:hover>*,
+table.dataTable.display>tbody>tr:hover>* {
+    box-shadow: inset 0 0 0 9999px var(--hoverRowColor);
+}
