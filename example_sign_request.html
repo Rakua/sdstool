@@ -1,0 +1,77 @@
+<!--
+ Example of how to send sign and verify requests to SDSTool (plain text or 
+ JSON sign requests) and receive the signed result.
+-->
+<!doctype html>
+
+<html>
+
+<head>
+    <script>
+        const port = 8045
+        const local = true
+
+        const sdstUrl = local ? "http://localhost:" + port : "https://sdstool.app"
+        const callbackUrl = "http://localhost:" + port + "/example_sign_request.html#X"
+        const acceptedAlgs = ["secp256k1", "ed25519", "ed448", "xx"] //unknown algs are filtered by sdstool
+        const acceptedDms = ["sha512", "sha256"]
+
+        //send sign request
+        function sign() {
+            const data = document.getElementById("signData").value
+            const obj = {
+                "contextId": document.getElementById("contextId").value,
+                "callback": callbackUrl, //url that is called when "Send to" is clicked in SDSTool
+                "signData": document.getElementById("signData").value, //can be json sr or plain text
+                "acceptedAlgorithms": acceptedAlgs, //optional, can be used to specify accepted algs for plain text
+                "acceptedDigestMethods": acceptedDms //optional, can be used to specify accepted dms for plain text            
+            }
+            window.open(sdstUrl + "/#S" + encodeURIComponent(JSON.stringify(obj)), "_self")
+        }
+
+        //send verify request
+        function verify() {
+            const data = document.getElementById("signData").value
+            //window.location.assign("http://localhost:8181/#V"+encodeURIComponent(data))
+            window.open(sdstUrl + "/#V" + encodeURIComponent(data))
+        }
+
+        //receive signed sign request
+        function receive() {
+            const hashVal = window.location.hash
+            if(hashVal.startsWith("#X")) {
+                document.getElementById("signButton").disabled = true
+                const hashData = JSON.parse(decodeURIComponent(hashVal.slice(2)))
+                document.getElementById("signData").value = hashData.signData
+                document.getElementById("contextId").value = hashData.contextId
+            }
+        }
+    </script>
+    <style>
+        button {
+            font-size: 1em;
+            margin-left: 1em;
+            margin-right: 1em;
+        }
+
+        button>img,
+        button>span {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body onload="receive()">
+    <input id="contextId" style="width:400px;margin-bottom:1em;" type="text" placeholder="contextId (optional)"><br>
+    <textarea id="signData" style="width:400px;height:200px;" placeholder="signData"></textarea><br>
+    <div style="width:400px;margin-top:1em;text-align:center">
+        <button id="signButton" onClick="sign(callbackUrl)">
+            <img src="img/logo.svg" style="width:18px"><span>Sign</span>
+        </button>
+        <button id="verifyButton" onClick="verify()">
+            <img src="img/logo.svg" style="width:18px"><span>Verify</span>
+        </button>
+    </div>
+</body>
+
+</html>

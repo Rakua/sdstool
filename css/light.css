@@ -1,0 +1,25 @@
+:root[data-theme="light"] {
+    color-scheme: light;
+    --backgroundColor: #fff;
+    --textColor: rgb(14, 14, 14);
+    --linkColor: #0066CC;
+    --linkHoverColor: #003b76;
+
+    --errorColor: red;
+    --warningColor: rgb(218, 116, 0);
+    --cmdColor: blue;
+
+    --paneBorderColor: #adadad;
+    --paneHeaderColor: #f2f2f2;
+    --activeTabColor: #ccc;
+    --hoverTabColor: #ddd;
+    --overlayColor: rgba(255, 255, 255, 0.75);
+
+    --oddRowColor: #f6f6f6;
+    --hoverRowColor: #eeeeee;
+
+    --verifyValidColor: #a9ffb5;
+    --verifyInvalidColor: #ffa9a9;
+    --verifyIllegalColor: #ffffa9;
+    --verifyUnverifiableColor: #e1e1e1;
+}
