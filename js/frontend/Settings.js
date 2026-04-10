@@ -9,7 +9,12 @@ class Settings {
         Settings.load(true)
         $("#resetSettings")[0].addEventListener("click", ev => Settings.reset())
 
-
+        $("#settingsUseLocalStorage")[0].addEventListener("click", (ev) => {
+            if(Storage.dbInStorageIsLoaded()) {
+                alert("You cannot disable this option if the current database in storage is still loaded. You need to unload it first by creating a new database.")
+                ev.preventDefault()
+            }
+        }, false)
     }
 
     static reset() {
@@ -60,7 +65,7 @@ class Settings {
         return x !== null ? x : this.default()[id]
     }
 
-    static default(name) {
+    static default() {
         return {
             "settingsShowConsole": false,
             "settingsShowAdvancedOptions": false,
@@ -75,14 +80,19 @@ class Settings {
             "settingsKeyIdPrefixPlainText": false,
             "settingsSignWithKeyId": false,
             "settingsChooseDigest": false,
+            "settingsVerifyKeyId": true,
             "settingsAlwaysLoadLocalDb": true,
             "settingsUseShortEndingPhrase": false,
             "settingsBreakAfterEndingPhrase": false,
             "settingsUseAutoPassword": false,
-            "settingsUseDarkTheme": false,
+            "settingsUseDarkTheme": userPrefersDark(),
             "settingsDateFormat": "locale",
             "settingsEntriesPerPage": 10,
             "settingsRedirectUrl": ""
         }
     }
+}
+
+function userPrefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
 }

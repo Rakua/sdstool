@@ -54,7 +54,7 @@ GUI.verify = async function (sdsTool, data, showJsonResult) {
         try {
             //verify JSON sign request
             const sr = SDSTool.validateJsonSignRequest(obj, true)
-            let res = await sdsTool.verifyJsonSignRequest(sr)
+            let res = await sdsTool.verifyJsonSignRequest(sr, Settings.getBoolSetting("settingsVerifyKeyId"))
 
             if(showJsonResult === true) $("#verifyData")[0].value = JSON.stringify(res, undefined, 2)
 
@@ -134,6 +134,5 @@ GUI.addSignerKey = function (publicKey) {
 GUI.viewSignerKey = function (keyId) {
     //global reference to sdsTool...
     GUI.viewKey(sdsTool.keyDatabase, keyId)
-    GUI.openTab("actionNavi", "keys")
-    GUI.openTab("keysNavi", "viewKey")
+    GUI.openTab("actionNavi", "view")
 }

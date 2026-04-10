@@ -24,7 +24,10 @@
     <!-- https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js -->
     <script src="js/libs/webterm-b304a23.bundle.js"></script>
     <script src="js/libs/xterm-b304a23.js"></script>
-
+    
+    <script>var exportSDSTRequest = true;</script>
+    <script src="js/sdst-request.js" type="module"></script>
+    
     <script src="js/misc.js"></script>
 
     <script src="js/backend/WasmWrapper.js"></script>
@@ -55,13 +58,13 @@
             <button name="verify"><span class="emoji">🧐</span> Verify</button>
             <button name="settings"><span class="emoji">⚙️</span> Settings</button>
             <button name="help"><span class="emoji">❓</span> Help</button>
+            <button name="view" style="display:none"><span class="emoji">🔍</span> View</button>
         </div>
         <div class="actionContentArea tabContent">
             <div id="keys">
                 <div id="keysNavi" class="tabs subtabs">
                     <a name="generateKey">Generate</a>
                     <a name="addKey">Add</a>
-                    <a name="viewKey">View</a>
                 </div>
                 <div id="generateKey">
                     <div class="form">
@@ -194,40 +197,39 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
                     </div>
                     <div class="output"></div>
                 </div>
-                <div id="viewKey" class="form">
+            </div>
+            <div id="view" class="form">
+                <label for="viewKeyAlias">Alias</label>
+                <input type="text" id="viewKeyAlias" readonly>
 
-                    <label for="viewKeyAlias">Alias</label>
-                    <input type="text" id="viewKeyAlias" readonly>
+                <label for="viewKeyKid">KeyId</label>
+                <input type="text" id="viewKeyKid" class="monospace" readonly>
 
-                    <label for="viewKeyKid">KeyId</label>
-                    <input type="text" id="viewKeyKid" class="monospace" readonly>
+                <label for="viewKeyAlgorithm">Algorithm</label>
+                <input type="text" id="viewKeyAlgorithm" readonly>
 
-                    <label for="viewKeyAlgorithm">Algorithm</label>
-                    <input type="text" id="viewKeyAlgorithm" readonly>
+                <label for="viewKeyCreated">Added on</label>
+                <input id="viewKeyCreated" type="text" readonly>
 
-                    <label for="viewKeyCreated">Added on</label>
-                    <input id="viewKeyCreated" type="text" readonly>
+                <label for="viewKeyPublicKey">Public key</label>
+                <textarea id="viewKeyPublicKey" class="monospace" spellcheck="false" readonly></textarea>
 
-                    <label for="viewKeyPublicKey">Public key</label>
-                    <textarea id="viewKeyPublicKey" class="monospace" spellcheck="false" readonly></textarea>
+                <details id="viewKeyPrivateKeyDetails">
+                    <summary>Private key</summary>
+                    <textarea id="viewKeyPrivateKey" class="monospace" spellcheck="false" readonly></textarea>
+                </details>
 
-                    <details id="viewKeyPrivateKeyDetails">
-                        <summary>Private key</summary>
-                        <textarea id="viewKeyPrivateKey" class="monospace" spellcheck="false" readonly></textarea>
-                    </details>
+                <details>
+                    <summary>JSON Key</summary>
+                    <textarea id="viewKeyRaw" class="monospace noLineWrap" style="height:12em;" spellcheck="false"
+                        readonly></textarea>
+                </details>
 
-                    <details>
-                        <summary>JSON Key</summary>
-                        <textarea id="viewKeyRaw" class="monospace noLineWrap" style="height:12em;" spellcheck="false"
-                            readonly></textarea>
-                    </details>
-
-                    <div class="submit"><button id="viewKeyButton">Clear</button></div>
-                </div>
+                <div class="submit"><button id="viewKeyButton">Clear</button></div>
             </div>
             <div id="sign">
                 <div class="form">
-                    <label for="signData">Data to sign
+                    <label for="signData" id="labelSignData">Data to sign <span id="signDataSignFor"></span>
                         <div class="error" id="signErrInvalidJsonSr">Invalid JSON sign request<sup>?</sup></div>
                         <div class="error" id="signErrNoAcceptedKey">No key with accepted algorithm exists</div>
                         <div class="error" id="signErrRequestedKeysMissing">Requested signing key(s) not in database
@@ -388,6 +390,13 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
                             </div>
 
                             <div class="formCheckbox">
+                                <input type="checkbox" id="settingsVerifyKeyId">
+                                <label for="settingsVerifyKeyId"
+                                    title="If a signature in a JSON SR contains both a public key and a KeyId then check that the KeyId matches the given public key. If disabled, the KeyId is ignored.">
+                                    Verify KeyId</label>
+                            </div>                            
+
+                            <div class="formCheckbox">
                                 <input type="checkbox" id="settingsNormalizePlainText">
                                 <label for="settingsNormalizePlainText"
                                     title="Shrinks consecutive whitespaces to single ones and removes leading and trailing whitespaces in every line.">Normalize
@@ -427,15 +436,13 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
 
                             <div class="formCheckbox">
                                 <input type="checkbox" id="settingsUseAutoPassword">
-                                <label for="settingsUseAutoPassword">Use password input by browser without
-                                    confirmation</label>
+                                <label for="settingsUseAutoPassword" title="Browser submits remembered password without confirmation when loading a database from storage. Only works on Firefox.">Automatically load database from storage</label>
                             </div>
 
                             <div class="formInput">
                                 <label for="settingsRedirectUrl"
-                                    title="If you prefer to use a self-hosted version of SDSTool, you can enter its URL here and all sign and verify requests will be redirected to your instance.">Redirect
-                                    URL (empty = disabled)</label>
-                                <input type="text" placeholder="Redirect URL (e.g. http://localhost:8045)"
+                                    title="If you prefer to use a self-hosted version of SDSTool, you can enter its URL here and all sign and verify requests will be redirected/forwarded to your instance. Enable pop-ups for this website in order for it to work.">URL of self-hosted SDSTool instance</label>
+                                <input type="text" placeholder="empty = disabled, e.g. http://localhost:8045"
                                     id="settingsRedirectUrl">
                             </div>
                         </details>
@@ -489,14 +496,18 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
 
                     <p>
                         You can sign your posts before submitting them to a platform. If a platform disables your
-                        account, you can still post under that identity anywhere else via your key pair. Additionally,
-                        you obtain an identity that can be recognized across platforms.
+                        account, you can still post under that identity anywhere else via your key pair. 
+                        Additionally, you have an identity that can be recognized across platforms.
                     </p>
 
                     <p>
                         You can share your public key with your friends so that even if you contact them from an unknown
                         address, they can verify that the message is from you.
                     </p>
+
+                    <p>
+                        You can post signed comments on <a href="https://senf.in">senf.in</a>.
+                    </p>                    
                 </details>
 
                 <details>
@@ -512,16 +523,17 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
                     <p>
                         Go to the Settings tab and check that <i>Auto-save and load database</i> is enabled. After
                         setting a password your database will be automatically saved in your browser whenever you modify
-                        it. When you open this site you will be prompted for a password to load the database from your
-                        browser.
+                        it.
                     </p>
 
                     <p>
-                        Only one database can be saved in your browser. If a database is already saved in your browser,
-                        it will not be overwritten. You must delete it before a new database can be saved in your
-                        browser. If the <i>Delete</i> button is disabled, this means no database is stored in your
-                        browser.
+                        Only one database can be stored in your browser. If a database is already stored in your
+                        browser,
+                        it will not be overwritten. You must delete it before a new database can be stored.
                     </p>
+
+                    <p><span style="color:red">Important:</span> Always save your key database as 
+                        local file in case the database in your browser gets deleted!</p>
                 </details>
 
                 <details>
@@ -538,8 +550,9 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
                     <ul>
                         <li><span style="font-family:monospace">Alt+P</span> open password dialog</li>
                         <li><span style="font-family:monospace">Alt+C</span> show/hide console</li>
-                        <li><span style="font-family:monospace">Alt+W</span> toggle word wrap in Sign &amp; Verify tab</li>
-                        <li><span style="font-family:monospace">Alt+R</span> clear output messages in panes</li>                                            
+                        <li><span style="font-family:monospace">Alt+W</span> toggle word wrap in Sign &amp; Verify tab
+                        </li>
+                        <li><span style="font-family:monospace">Alt+R</span> clear output messages in panes</li>
                         <li><span style="font-family:monospace">Alt+G</span> generate 1000 keys when the Generate tab is
                             open (you can use this to generate a key pair with a memorable KeyId)</li>
                     </ul>
@@ -609,11 +622,22 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
                 <button id="dbLoadButton">Load</button>
                 <button id="dbNewButton">New</button>
                 <button id="dbSetPasswordButton">Set Password</button>
-                <button id="dbDeleteButton"
-                    title="Deletes database stored in your browser's local storage. This button is only active if one exists.">Delete</button>
                 <form id="dbLoadFileForm" style="display:none"><input type="file" id="dbLoadFile" style="display:none">
                 </form>
             </div>
+
+            <table id="dbInBrowser" class="cdbis">
+                <tr>
+                    <td>
+                        Database in storage: <span id="currentDbInStorage"></span>
+                    </td>
+                    <td style="text-align: right;">
+                        <button id="dbInStorageLoad">Load</button>
+                        <button id="dbInStorageDelete">Delete</button>
+                    </td>
+                </tr>                                
+            </table>
+
             <div class="output"></div>
         </div>
 
@@ -627,18 +651,28 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
     </div>
     <div id="xterm" style="display:none"></div>
     <div id="passwordOverlay" class="blockingOverlay">
-        <div class="passwordPrompt form">
-            <label for="dbPassword">Set database password</label>
-            <input id="dbPassword" type="password" placeholder="Password (empty = unset)">
-            <div class="formCheckbox">
-                <input type="checkbox" id="showPassword">
-                <label for="showPassword">Show password</label>
+        <form id="passwordForm">
+            <div class="passwordPrompt form">
+                <div style="display:none">
+                    <label for="dbName">Database name</label>
+                    <input id="dbName" name="name" type="text" placeholder="DB name" autocomplete="username">
+                </div>
+
+                <div>
+                    <label for="dbPassword">Set database password</label>
+                    <input id="dbPassword" name="password" type="password" autocomplete="current-password" placeholder="Password (empty = unset)">
+                </div>
+
+                <div class="formCheckbox">
+                    <input type="checkbox" id="showPassword">
+                    <label for="showPassword">Show password</label>
+                </div>
+                <div class="submit">
+                    <button id="passwordPromptOk" type="submit">Ok</button>
+                    <button id="passwordPromptCancel">Cancel</button>
+                </div>
             </div>
-            <div class="submit">
-                <button id="passwordPromptOk">Ok</button>
-                <button id="passwordPromptCancel">Cancel</button>
-            </div>
-        </div>
+        </form>
     </div>
     <div id="loadingOverlay" class="blockingOverlay" style="display:block !important;">
         <div class="loadingMessage">SDSTool is loading, please wait.</div>
@@ -646,6 +680,9 @@ a JSON key (multiple ones as array)" class="monospace noLineWrap" spellcheck="fa
     <div id="failedToLoadOverlay" class="blockingOverlay">
         <div class="loadingMessage">SDSTool failed to load. Please open it again in a new tab.</div>
     </div>
+    <div id="errorOverlay" class="blockingOverlay">
+        <div class="loadingMessage" id="errorMessage">Error message</div>
+    </div>    
 </body>
 
 </html>

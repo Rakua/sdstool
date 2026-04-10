@@ -253,3 +253,29 @@ sup[onclick] {
     border: 1px solid var(--paneBorderColor);
     background-color:  var(--backgroundColor);
 }
+
+.cdbis {
+    margin-top: 2em;
+    padding:1em;
+    font-size: 0.9em;
+    overflow: auto;    
+    border-top: 1px solid var(--paneBorderColor);
+    border-bottom: 1px solid var(--paneBorderColor);
+    width:100%;
+}
+
+.cdbis td {
+    vertical-align: middle;
+}
+
+.cdbis button {
+    padding: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;    
+}
+
+.dbInStorageLoaded {
+    color:var(--linkColor);
+}

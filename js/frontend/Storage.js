@@ -1,31 +1,40 @@
 class Storage {
 
-    static loadDatabase(callback) {
+    static initLoadDatabase(callback) {
         const isNewSession = sessionStorage.getItem("storage/sessionStarted") === null
         const useLocalStorage = Settings.getBoolSetting("settingsUseLocalStorage")
 
-        if(Storage.databaseExists())
+        if(Storage.databaseExists()) {
             GUI.consolePrint("Database '" + Storage.dbName() + "' found in local storage.", true)
+        } else {
+            //no database in storage -> set password to "" to prevent auto-saving
+            console.debug("No db in storage -> remove password")
+            GUI.setPassword("")
+        }
+
 
         //only try to load db from local storage on session start and
         //when resp. setting is turned on and a database exists in local storage
         if((Settings.getBoolSetting("settingsAlwaysLoadLocalDb") || isNewSession)
             && useLocalStorage && Storage.databaseExists()) {
-
-            //try to load from local storage into session storage
             sessionStorage.setItem("storage/sessionStarted", "true")
-            const kdbString = localStorage.getItem("storage/database")
+            Storage.loadDatabase(callback, true)
+        }
+    }
 
-            if(Settings.getBoolSetting("settingsUseAutoPassword") && GUI.getDatabasePassword() !== null) {
-                //does not work on Chromium: https://issues.chromium.org/issues/41288742
-                //https://stackoverflow.com/questions/60669613/read-value-from-chrome-autofill-with-javascript-chrome-extension
-                callback(Storage.dbName(), kdbString, GUI.getDatabasePassword())
-            } else {
-                //ask for password & call callback (only if prompt was closed by clicking ok)
-                GUI.passwordPrompt("Password for database '" + GUI.sanitize(Storage.dbName()) + "'", function (ok) {
-                    if(ok) callback(Storage.dbName(), kdbString, GUI.getDatabasePassword())
-                })
-            }
+    static loadDatabase(callback, autoPw) {
+        //try to load from local storage        
+        const kdbString = localStorage.getItem("storage/database")
+
+        if(autoPw && Settings.getBoolSetting("settingsUseAutoPassword") && GUI.getDatabasePassword() !== null) {
+            //does not work on Chromium: https://issues.chromium.org/issues/41288742
+            //https://stackoverflow.com/questions/60669613/read-value-from-chrome-autofill-with-javascript-chrome-extension
+            callback(Storage.dbName(), kdbString, GUI.getDatabasePassword())
+        } else {
+            //ask for password & call callback (only if prompt was closed by clicking ok)
+            GUI.passwordPrompt(Storage.dbName(), "Password for '" + Storage.dbName() + "'", function (ok) {
+                if(ok) callback(Storage.dbName(), kdbString, GUI.getDatabasePassword())
+            })
         }
     }
 
@@ -47,6 +56,7 @@ class Storage {
         if(databaseExisted && changeEvent === "dbNameChanged") {
             //if dbName changes, only update it in storage instead of re-encrypting the whole db
             localStorage.setItem("storage/dbName", dbName)
+            GUI.updateDataseInStorageDisplay()
             return
         }
 
@@ -62,7 +72,7 @@ class Storage {
                 GUI.printOutputSuccess("database", msg(GUI.sanitize(dbName)))
                 GUI.consolePrint(msg(dbName) + "\n", true)
 
-                GUI.updateDbDeleteButtonState()
+                GUI.updateDataseInStorageDisplay()
             } else {
                 GUI.consolePrint("Updated db in local storage\n", true)
             }
@@ -84,13 +94,14 @@ class Storage {
         localStorage.removeItem("storage/database")
         localStorage.removeItem("storage/dbName")
         localStorage.removeItem("storage/createdOn")
+        localStorage.removeItem("storage/guid")
 
-        const msg = "Deleted database '" + dbName + "' from browser's local storage."
+        const msg = "Deleted database '" + GUI.sanitize(dbName) + "' from browser's local storage."
         GUI.clearOutput("database")
         GUI.printOutputSuccess("database", msg)
         GUI.consolePrint(msg + "\n", true)
 
-        GUI.updateDbDeleteButtonState()
+        GUI.updateDataseInStorageDisplay()
     }
 
     static databaseExists() {
@@ -103,5 +114,9 @@ class Storage {
 
     static guid() {
         return localStorage.getItem("storage/guid")
+    }
+
+    static dbInStorageIsLoaded() {
+        return localStorage.getItem("storage/guid") === sdsTool.keyDatabase.getGuid()
     }
 }

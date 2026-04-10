@@ -4,7 +4,7 @@ class KeyDatabase {
     constructor(dbName) {
         const f = (x) => (x+"").padStart(2,"0")
         const now = new Date()
-        const defaultName = "kdb_" + (now.getFullYear()+"").slice(2) + f(now.getMonth()) + f(now.getDate()) + "-" + f(now.getHours()) + f(now.getMinutes()) + f(now.getSeconds())
+        const defaultName = "kdb_" + (now.getFullYear()+"").slice(2) + f(now.getMonth()+1) + f(now.getDate()) + "_" + f(now.getHours()) + f(now.getMinutes()) + f(now.getSeconds())
 
         this.dbName = dbName !== undefined ? dbName : defaultName
         this.createdOn = now

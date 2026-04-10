@@ -224,9 +224,7 @@ GUI.viewKey = function (keyDatabase, keyId) {
     }
 
     $("#viewKeyButton")[0].disabled = false
-
-    //open keys/view
-    GUI.openTab("keysNavi", "viewKey")
+    
     if(GUI.activeTab("actionNavi") === "sign" //sign tab is open
         && isKeyPair
         && $("#signButton")[0].getAttribute("requestedKeys") === null //not a JSON sr where no key can be selected
@@ -236,7 +234,7 @@ GUI.viewKey = function (keyDatabase, keyId) {
         GUI.signSelectKey(keyId)
         $("#signSigningKey")[0].dispatchEvent(new Event("change", { "view": window, "bubbles": true }))
     } else {
-        GUI.openTab("actionNavi", "keys")
+        GUI.openTab("actionNavi", "view")
     }
 
 }

@@ -7,8 +7,25 @@ class GUI {
             //In Chromium running "openssl version" on WasmWebTerm throws an error
             //sometimes. Try reloading the page in that case and wait 1 second before 
             //executing the first command. Order of execution problem?
-            if(sessionStorage.getItem("GUI/cleanRefresh") !== null) await new Promise(r => setTimeout(r, 1000));
+            if(sessionStorage.getItem("GUI/cleanRefresh") !== null) {
+                const rt = parseInt(localStorage.getItem("GUI/reloadTimeout"))
+                const timeout = isNaN(rt) || rt < 1 ? 1000 : rt
+                await new Promise(r => setTimeout(r, timeout))
+            }
+
             await GUI.initConsole(sdsTool)
+
+            GUI.initDatabase(sdsTool)
+            GUI.initKeys(sdsTool)
+            GUI.initSign(sdsTool)
+            GUI.initVerify(sdsTool)
+
+            //GUI.initTabs() //call later (in main.js) to get right column spacing for db tables
+            GUI.initDetails()
+            GUI.clearOutputs()
+            GUI.initShortcuts()
+
+            GUI.initRequest()
         } catch(e) {
             //Opening SDSTool in a second tab in Chromium breaks the UI.
             //Cleaning the sessionStorage and reloading the page fixes it.    
@@ -20,15 +37,6 @@ class GUI {
                 GUI.cleanRefresh()
             }
         }
-        GUI.initDatabase(sdsTool)
-        GUI.initKeys(sdsTool)
-        GUI.initSign(sdsTool)
-        GUI.initVerify(sdsTool)
-
-        //GUI.initTabs() //call later (in main.js) to get right column spacing for db tables
-        GUI.initDetails()
-        GUI.initOutput()
-        GUI.initShortcuts()
     }
 
     static cleanRefresh() {
@@ -44,7 +52,7 @@ class GUI {
                 GUI.toggleConsole()
             } else if(e.altKey && e.key === "r") {
                 //clear outputs on Alt + R
-                GUI.initOutput()
+                GUI.clearOutputs()
             } else if(e.altKey && e.key === "w") {
                 //toggle word wrap on Alt + W
                 $("#signData")[0].classList.toggle("noLineWrap")
@@ -66,16 +74,23 @@ class GUI {
                     }
                     $("#generateKeyPairButton")[0].disabled = false
                 }
-            } else if(e.key === 'Enter' && $("#passwordOverlay")[0].style.display !== 'none') {                
+            } else if(e.key === 'Enter' && $("#passwordOverlay")[0].style.display !== 'none') {
                 //confirm password prompt with enter
                 $("#passwordPromptOk")[0].dispatchEvent(new Event("click", { "view": window, "bubbles": true }))
+            } else if(e.key === 'Escape' && $("#passwordOverlay")[0].style.display !== 'none') {
+                //cancel password prompt with escape
+                $("#passwordPromptCancel")[0].dispatchEvent(new Event("click", { "view": window, "bubbles": true }))
             }
         })
     }
 
     /* action output functions */
-    static initOutput() {
+    static clearOutputs() {
         ["generateKey", "addKey", "sign", "verify", "database"].map(GUI.clearOutput)
+    }
+
+    static clearAllExceptSign() {
+        ["generateKey", "addKey", "verify", "database"].map(GUI.clearOutput)
     }
 
     static clearOutput(name) {
@@ -163,6 +178,12 @@ class GUI {
 
         //remember last opened tab
         sessionStorage.setItem("gui/tabs/" + tabsId, tabName)
+
+        if(GUI.getSignRequest() !== undefined) {
+            GUI.clearAllExceptSign()
+        } else {
+            GUI.clearOutputs()
+        }
     }
 
     static activeTab(tabsId) {
@@ -192,82 +213,121 @@ class GUI {
     }
 
 
-    /* hash redirect (sign #S / verify #V)  */
-    static redirectArgument() {
-        return window.location.hash.slice(2)
-    }
+    /* sign / verify request related functions  */
+    static async initRequest() {
+        const ru = Settings.getStringSetting("settingsRedirectUrl")
+        try {
+            const req = await getRequest()
+            if(req === undefined) return //no request
+            console.info("sign/verify request:", req)
 
-    static hashRedirect() {
-        const hashValue = window.location.hash
-        const mode = hashValue.slice(1, 2) //S for sign or V for verify
-        const arg = hashValue.slice(2)
+            if(req.type == "sign") {
+                if(ru == null || ru == "") {
+                    //no redirect
+                    GUI.signRequest(req)
+                } else if(req.fromFragmentId === false) {
+                    //forward sign request and send response back to opener, then close this window
+                    GUI.blockingInfo(`Forwarding sign request from '${req.origin}' to '${ru}'. Please do not close this window.`)
 
-        //check for redirect sign #S or verify #V
-        if(mode == "S") {
-            GUI.openTab("actionNavi", "sign")
-            try {
-                //json obj: callback, signData (string or JSON sign request), acceptedAlgorithms, acceptedDigestMethods, contextId
-                const signObj = JSON.parse(decodeURIComponent(arg))
-                if(signObj.signData === undefined) {
-                    GUI.printOutputError("sign", "Field 'signData' missing in sign request")
-                    return
+                    const optionKeys = ["acceptedAlgorithms", "acceptedDigestMethods", "requirePublicKey", "requestSignaturesFrom", "contextId"]
+                    const options = {}
+                    optionKeys.forEach(k => { options[k] = req[k] })                    
+                    const rootOrigin = SDSTSignRequest.rootOrigin(req)
+                    const sr = new SDSTSignRequest(req.signData, options, ru, rootOrigin)
+                    const resp = await sr.start()
+                    window.opener.postMessage(resp, req.origin)
+                    window.close()
                 }
-
-                //if signData is not a string, convert to its JSON string representation
-                const signData = (typeof signObj.signData == "string") ? signObj.signData : JSON.stringify(signObj.signData, null, 2)
-                const sdEl = $("#signData")[0]
-                sdEl.value = signData
-
-                //attach additional information as attributes to #signData and #signCopyButton
-                //acceptedAlgorithms and acceptedDigestMethods are only applied to plain text
-                if(signObj.acceptedAlgorithms !== undefined) {
-                    const algs = AlgorithmNames.acceptedAlgorithms(signObj.acceptedAlgorithms)
-                    sdEl.setAttribute("acceptedAlgorithms", algs.join(";"))
-                    GUI.printOutputInfo("sign", "Accepted algorithm(s): " + algs.join(", "))
+            } else if(req.type == "verify") {
+                if(ru == null || ru == "") {
+                    //no redirect
+                    GUI.verifyRequest(req)
+                } else if(req.fromFragmentId === false) {
+                    //forward verify request and close this window
+                    console.log("vr verifyData", req.verifyData)
+                    const vr = new SDSTVerifyRequest(req.verifyData, ru)
+                    await vr.start() //wait until verify request has been sent
+                    window.close()
                 }
-                if(signObj.acceptedDigestMethods !== undefined) {
-                    const dms = AlgorithmNames.acceptedDigestMethods(signObj.acceptedDigestMethods)
-                    sdEl.setAttribute("acceptedDigestMethods", dms.join(";"))
-                    GUI.printOutputInfo("sign", "Accepted digest method(s): " + dms.join(", "))
-                }
-                if(signObj.callback !== undefined && typeof signObj.callback == "string") {
-                    const match = signObj.callback.match(/https?:\/\/([^\/]+)\//)
-                    const hostname = match ? match[1] : null;
-                    if(hostname === null) throw new Error("could not extract hostname from callback")
-                    const cbEl = $("#signCopyButton")[0]
-                    cbEl.setAttribute("callback", signObj.callback)
-                    cbEl.innerText = "Send to " + hostname
-                }
-                if(signObj.contextId !== undefined && typeof signObj.contextId == "string") {
-                    const cbEl = $("#signCopyButton")[0]
-                    cbEl.setAttribute("contextId", signObj.contextId)                    
-                }
-
-
-                sdEl.dispatchEvent(new Event("change", { "view": window, "bubbles": true }))
-
-            } catch(e) {
-                GUI.openTab("actionNavi", "sign")
-                if(e instanceof SyntaxError) {
-                    GUI.printOutputError("sign", "Failed to decode data for sign redirect. JSON syntax error: " + e.message)
-                } else {
-                    GUI.printOutputError("sign", "Failed to decode data for sign redirect: " + e.message)
-                }
+            } else {
+                throw new Error("Unkown request type " + JSON.stringify(req.type))
             }
-        } else if(mode == "V") {
-            try {
-                const text = decodeURIComponent(arg)
-                $("#verifyData")[0].value = text
-                GUI.openTab("actionNavi", "verify")
-            } catch(e) {
-                GUI.openTab("actionNavi", "verify")
-                GUI.printOutputError("verify", "Failed to decode data for verify redirect")
-            }
+        } catch(e) {
+            console.error("Sign/verify request failed:", e)
+            GUI.blockingInfo("Sign/verify request failed: " + e.message + "")
         }
     }
 
+    static signRequest(req) {
+        GUI.openTab("actionNavi", "sign")
+
+        //validate and normalize sign request
+        const signDataType = typeof req.signData
+        if(signDataType != "string" && signDataType != "object")
+            throw new Error("Field 'signData' must be of type string or object but got " + signDataType)
+
+        if(req.acceptedAlgorithms !== undefined) {
+            req.acceptedAlgorithms = AlgorithmNames.acceptedAlgorithms(req.acceptedAlgorithms)
+            GUI.printOutputInfo("sign", "Accepted algorithm(s): " + req.acceptedAlgorithms.join(", "))
+        }
+
+        if(req.acceptedDigestMethods !== undefined) {
+            req.acceptedDigestMethods = AlgorithmNames.acceptedDigestMethods(req.acceptedDigestMethods)
+            GUI.printOutputInfo("sign", "Accepted digest method(s): " + req.acceptedDigestMethods.join(", "))
+        }
+
+        //hostname = null => no callback
+        let hostname = null
+        if(req.fromFragmentId === true) {
+            if(typeof req.callback == "string") {
+                try {
+                    const url = new URL(req.callback)
+                    if(url.protocol != "http:" && url.protocol != "https:")
+                        throw new Error("Callback must begin with http(s) but got " + url.protocol)
+                    hostname = url.hostname
+                } catch(e) {
+                    throw new Error("Could not extract hostname from callback: " + e.message)
+                }
+                req.hostname = hostname
+            } //else no callback
+        } else {
+            delete req.callback
+            try {
+                hostname = new URL(req.origin).hostname
+            } catch(e) {
+                //this should not be possible since origin comes from a message event
+                console.error("IMPOSSIBLE! Could not extract hostname from origin (" + req.origin + ")", e)
+                throw new Error("IMPOSSIBLE! Could not extract hostname from origin (" + req.origin + "): " + e.message)
+            }
+        }
+        if(req.noCallback !== true) req.hostname = hostname
+
+        //attach serialized normalized request to #sign as attribute
+        document.getElementById("sign").setAttribute("request", JSON.stringify(req))
+        const sdEl = $("#signData")[0]
+        sdEl.value = signDataType == "object"
+            ? JSON.stringify(req.signData, undefined, 2)
+            : req.signData
+        sdEl.dispatchEvent(new Event("change", { "view": window, "bubbles": true }))
+    }
+
+    static verifyRequest(req) {
+        GUI.openTab("actionNavi", "verify")
+
+        if(typeof req.verifyData != "string" && typeof req.verifyData != "object")
+            throw new Error("verifyData must be a string or an object")
+
+        const vd = typeof req.verifyData == "object"
+            ? JSON.stringify(req.verifyData, undefined, 2) : req.verifyData
+        $("#verifyData")[0].value = vd
+    }
 
     /* misc */
+    static blockingInfo(msg) {
+        document.getElementById("errorMessage").innerText = msg
+        $("#errorOverlay").show()
+    }
+
     static setTheme() {
         if(Settings.getBoolSetting("settingsUseDarkTheme")) {
             $("html")[0].dataset.theme = "dark"
@@ -279,7 +339,6 @@ class GUI {
 
     }
 
-
     static dateToString(date, format) {
         if(date === undefined) return "N/A"
         switch(format) {
@@ -290,7 +349,6 @@ class GUI {
             default: return date.toISOString()
         }
     }
-
 
     static autoFormatJson(elId) {
         try {
@@ -318,15 +376,16 @@ class GUI {
     }
 
     static initWarnBeforeLeaving() {
-        const preventDefault = ev => ev.preventDefault()
-        const handler = function (ev) {
-            if(Settings.getBoolSetting("settingsWarnBeforeLeaving")) {
-                addEventListener("beforeunload", preventDefault)
-            } else {
-                removeEventListener("beforeunload", preventDefault)
+        const warnBeforeLeaving = (ev) => {
+            const dontAskBeforeClosing = $("#sign")[0].hasAttribute("dontAskBeforeClosing")
+            if(Settings.getBoolSetting("settingsWarnBeforeLeaving") && !dontAskBeforeClosing) {
+                ev.preventDefault()
             }
         }
-        $("#settingsWarnBeforeLeaving")[0].addEventListener("change", handler)
-        handler()
+        addEventListener("beforeunload", warnBeforeLeaving)
+    }
+
+    static dontAskBeforeClosing() {
+        $("#sign")[0].setAttribute("dontAskBeforeClosing", "true")
     }
 }

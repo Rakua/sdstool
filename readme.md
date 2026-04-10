@@ -8,9 +8,9 @@ It uses OpenSSL via WebAssembly to perform cryptographic operations.
 
 Download offline version (self-hosted):
 
-- Windows: [sdstool-windows-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.0/sdstool-windows-amd64.zip)
-- Linux: [sdstool-linux-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.0/sdstool-linux-amd64.zip)
-- macOS: [sdstool-darwin-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.0/sdstool-darwin-amd64.zip)
+- Windows: [sdstool-windows-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.1/sdstool-windows-amd64.zip)
+- Linux: [sdstool-linux-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.1/sdstool-linux-amd64.zip)
+- macOS: [sdstool-darwin-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.1/sdstool-darwin-amd64.zip)
 
 The following algorithms are supported:
 
@@ -27,9 +27,12 @@ A digest method can be chosen when signing with ECDSA or RSA (needs to be enable
   * Follow instructions at [https://github.com/cryptool-org/openssl-webterm](https://github.com/cryptool-org/openssl-webterm?tab=readme-ov-file#compiling-openssl)
   * Copy `openssl.wasm` and `openssl.js` to the `binaries` directory
 * Install Golang: https://go.dev/doc/install
-* Compile the webserver: `go build sdstool.go`
+* Compile the webserver: `go build sdstool.go`  
 * Execute the compiled binary (`sdstool.exe` or `sdstool`)
 * Open http://localhost:8045 in your browser
+
+For development mode set `devMode` in `sdstool.go` to true and run `go run sdstool.go $PORT`
+where `$PORT` is the port the webserver should listen to (if omitted the port 8045 is taken).  
 
 ## Dependencies
 
@@ -90,3 +93,14 @@ A signature object consists of:
 - `digestMethod`: used digest method (optional)
 
 It must contain the field `publicKey` or `keyId`. If `digestMethod` is undefined, SHA-256 is assumed as default where applicable.
+
+## Requesting signatures from users
+You can request signatures from users on your website via the library `js/sdst-request.js`, see [example_request.html](https://sdstool.app/example_request.html).
+
+## HTTP headers
+In order for a browser to be able to run OpenSSL in a WebWorker the headers 
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: credentialless
+```
+must be set, see [SharedArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements). If OpenSSL is not executed in a WebWorker the UI freezes when OpenSSL is working, e.g. during key generation. You can check whether OpenSSL is executed in a WebWorker by looking at the UI console (press Alt+C or enabled `Show console` in the settings tab). 

@@ -70,30 +70,50 @@ GUI.initDatabase = function (sdsTool) {
 
     GUI.syncDatabaseSearchInputs()
 
-    //set up db butons
+    //set up db actions
     $("#dbNewButton")[0].addEventListener("click", GUI.newDatabase)
     $("#dbSaveButton")[0].addEventListener("click", ev => GUI.saveDatabase(sdsTool))
     $("#dbLoadButton")[0].addEventListener("click", ev => $("#dbLoadFile")[0].click())
-    $("#dbDeleteButton")[0].addEventListener("click", function () {
-        if(confirm("Do you want to delete the database '" + Storage.dbName() + "' in your browser's local storage?"))
-            Storage.clear()
-    })
     $("#dbLoadFile")[0].addEventListener("change", ev => GUI.loadDatabase(sdsTool))
+
+    $("#dbInStorageDelete")[0].addEventListener("click", function () {
+        if(confirm("Do you want to delete the database '" + Storage.dbName() + "' from your browser's local storage?")) {
+            Storage.clear()
+            GUI.setPassword("")
+        }
+    })
+    $("#dbInStorageLoad")[0].addEventListener("click", () => Storage.loadDatabase(GUI.loadDatabaseCallback))
+
     GUI.updateDatabasePasswordButton()
-    GUI.updateDbDeleteButtonState()
+    GUI.updateDataseInStorageDisplay()
+
+    const showHideDbInStorage = () => {
+        if(Settings.getBoolSetting("settingsUseLocalStorage")) {
+            $("#dbInBrowser").show()
+        } else {
+            $("#dbInBrowser").hide()
+        }
+    }
+    $("#settingsUseLocalStorage")[0].addEventListener("change", showHideDbInStorage)
+    showHideDbInStorage()
 
     $("#showPassword")[0].addEventListener("change", function (ev) {
         $("#dbPassword")[0].type = $("#showPassword")[0].checked ? "text" : "password"
     })
+
+    $("#passwordForm")[0].addEventListener("submit", (e) => e.preventDefault())
+
+
 }
 
 GUI.newDatabase = function () {
     if(confirm("Do you want to create a new database? This will delete the current database. Make sure to save it beforehand.")) {
         //Storage.clear()
-        GUI.initOutput() //delete all output messages
+        GUI.clearOutputs() //delete all output messages
         GUI.viewKeyClose()
         sdsTool.loadKeyDatabase(new KeyDatabase())
         GUI.consolePrint("New database created\n", true)
+        GUI.updateDataseInStorageDisplay()
         //location.reload()
     }
 }
@@ -130,8 +150,9 @@ GUI.loadDatabase = function (sdsTool) {
             let kdbString = ev.target.result
             if(SDSTool.isEncryptedKeyDatabase(kdbString)) {
                 //load encrypted database
-                GUI.passwordPrompt("Password for file '" + selectedFile.name + "'", async function (ok) {
-                    const password = GUI.getDatabasePassword()                    
+                const label = "Password for file '" + GUI.sanitize(selectedFile.name) + "'"
+                GUI.passwordPrompt(selectedFile.name, label, async function (ok) {
+                    const password = GUI.getDatabasePassword()
                     if(!ok || password === null) {
                         //cancelled loading db from file
                         GUI.consolePrint("Cancelled loading encrypted database from file '" + selectedFile.name + "'", true)
@@ -172,8 +193,9 @@ GUI.loadDatabaseFromString = async function (dbName, kdbString, password, fromSt
             "Loaded database from file '" + dbName + "'"
 
         GUI.clearOutput("database")
-        GUI.printOutputInfo("database", msg)
+        if(!fromStorage) GUI.printOutputInfo("database", msg)
         GUI.consolePrint(msg + "\n", true)
+        GUI.updateDataseInStorageDisplay()
         res = true
     } catch(e) {
         const errMsg = fromStorage === true ?
@@ -362,11 +384,15 @@ GUI.getDatabasePassword = function () {
     return pw === "" ? null : pw
 }
 
-GUI.passwordPrompt = function (text, callback) {
+GUI.passwordPrompt = function (dbName, text, callback) {
     const oldPassword = GUI.getDatabasePassword()
     const state = callback !== undefined ? "load" :
         (GUI.getDatabasePassword() === null ? "set" : "change")
-    
+
+    $("#dbPassword")[0].autocomplete = state == "load"
+        ? "current-password" : "new-password"
+
+    $("#dbName")[0].value = dbName
     $("label[for='dbPassword']")[0].innerText = text
     $("#passwordPromptOk")[0].onclick = function () {
         const pwChanged = oldPassword !== $("#dbPassword")[0].value
@@ -419,21 +445,51 @@ GUI.closePasswordPrompt = function (ok, pwChanged, state, callback) {
     $("#passwordOverlay").hide()
 }
 
+GUI.setPassword = function (pw) {
+    $("#dbPassword")[0].value = ""
+
+    const noPassword = GUI.getDatabasePassword() === null
+    GUI.updateDatabasePasswordButton()
+    $("#dbSetPasswordButton")[0].innerText = noPassword ? "Set password" : "Change password"
+}
+
 GUI.updateDatabasePasswordButton = function () {
     const noPassword = GUI.getDatabasePassword() === null
     const label1 = noPassword ? "Set password" : "Change password"
     const label2 = noPassword ? "Set database password" : "Change database password"
     $("#dbSetPasswordButton")[0].innerText = label1
-    $("#dbSetPasswordButton")[0].onclick = () => GUI.passwordPrompt(label2)
+    $("#dbSetPasswordButton")[0].onclick = () => GUI.passwordPrompt(sdsTool.keyDatabase.getDbName(), label2)
 }
 
 
-/* misc */
+/* database in storage */
 
-GUI.updateDbDeleteButtonState = function () {
-    if(Storage.databaseExists()) {
-        $("#dbDeleteButton")[0].disabled = false
+GUI.updateDataseInStorageDisplay = function () {
+    const dbNameInStorage = Storage.dbName()
+    if(dbNameInStorage == null) {
+        $("#currentDbInStorage")[0].innerHTML = '<i>empty</i>'
+        $("#currentDbInStorage")[0].classList.remove("dbInStorageLoaded")
     } else {
-        $("#dbDeleteButton")[0].disabled = true
+        $("#currentDbInStorage")[0].innerHTML = GUI.sanitize(dbNameInStorage)
     }
+
+    if(Storage.databaseExists()) {
+        $("#dbInStorageDelete").show()
+        if(Storage.dbInStorageIsLoaded()) {
+            $("#dbInStorageLoad").hide()
+            $("#currentDbInStorage")[0].classList.add("dbInStorageLoaded")
+        } else {
+            $("#dbInStorageLoad").show()
+            $("#currentDbInStorage")[0].classList.remove("dbInStorageLoaded")
+        }
+    } else {
+        $("#dbInStorageDelete").hide()
+        $("#dbInStorageLoad").hide()
+    }
+}
+
+GUI.loadDatabaseCallback = async function (dbName, kdbString, password) {
+    let loadedSuccessfully = await GUI.loadDatabaseFromString(dbName, kdbString, password, true)
+    //update db name since the one in local storage can differ from the one in the encrypted db
+    if(loadedSuccessfully) sdsTool.keyDatabase.setDbName(Storage.dbName())
 }

@@ -1,0 +1,134 @@
+<!--
+ Example of how to send sign and verify requests to SDSTool via
+ fragment id and receive the result of sign requests via callback
+ as part of the URL.
+
+ This method is not recommended since the data to sign/verify is 
+ stored in the user's browser history.
+-->
+<!doctype html>
+
+<html>
+
+<head>
+    <script>
+        //use this to export classes and functions from sdst-request to window object
+        var exportSDSTRequest = true;
+    </script>
+    <script src="js/sdst-request.js" type="module"></script>
+
+    <script>
+        const port = 8045
+        const local = true //set to false to send SR to https://sdstool.app
+
+        const sdstUrl = local ? "http://localhost:" + port : "https://sdstool.app"
+        const callbackUrl = sdstUrl + "/example_request_fragment_id.html#X"
+        const acceptedAlgs = ["secp256k1", "ed25519", "ed448", "xx"] //unknown algs are filtered by sdstool
+        const acceptedDms = ["sha512", "sha256"]
+        const requirePublicKey = true
+
+        //send sign request
+        function sign() {
+            const data = document.getElementById("signData").value
+            const options = {
+                "contextId": document.getElementById("contextId").value,
+                "callback": getCallbackUrl(), //url that is called when "Sign & send" is clicked in SDSTool                
+                "acceptedAlgorithms": acceptedAlgs, //optional, can be used to specify accepted algs for plain text
+                "acceptedDigestMethods": acceptedDms, //optional, can be used to specify accepted dms for plain text
+                "requirePublicKey": requirePublicKey, //optional, can be used to require signing plain text with public key             
+            }            
+            const requestUrl = SDSTSignRequestViaFragmentId(data, options, sdstUrl)
+            window.open(requestUrl, "_self")
+        }
+
+        //send verify request
+        function verify() {
+            const data = document.getElementById("signData").value
+            const requestUrl = SDSTVerifyRequestViaFragmentId(data, sdstUrl)
+            window.open(requestUrl)
+        }
+
+        //receive signed sign request
+        function receive() {
+            const hashVal = window.location.hash
+            if (hashVal.startsWith("#X")) {
+                //document.getElementById("signButton").disabled = true
+                const hashData = JSON.parse(decodeURIComponent(hashVal.slice(2)))
+                console.info("hashData", hashData)
+                document.getElementById("signData").value = hashData.signed ? hashData.data : "User did not sign"
+                document.getElementById("contextId").value = hashData.contextId
+
+                //remove response from URL
+                window.location.hash = ""
+            }
+        }
+
+        function init() {
+            document.getElementById("callback").value = callbackUrl
+        }
+
+        function getCallbackUrl() {
+            const x = document.getElementById("callback").value
+            return x == "" ? undefined : x
+        }
+    </script>
+    <style>
+        html,
+        body {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        main {
+            margin: auto;
+            width: 100%;
+            text-align: center;
+            padding-top: 1em;
+        }
+
+        input,
+        textarea,
+        .actions {
+            width: 90%;
+            margin-bottom: 1em;
+        }
+
+        textarea {
+            height: 150px;
+        }
+
+        .actions {
+            text-align: center;
+        }
+
+        button {
+            font-size: 1em;
+            margin-left: 1em;
+            margin-right: 1em;
+        }
+
+        button>img,
+        button>span {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body onload="init();receive()">
+    <main>
+        <input id="callback" type="text" placeholder="callback URL for sign requests (empty => no callback)"><br>
+        <input id="contextId" type="text" placeholder="contextId (optional)"><br>
+        <textarea id="signData" placeholder="signData"></textarea><br>
+        <div class="actions">
+            <button id="signButton" onClick="sign(callbackUrl)">
+                <img src="img/logo.svg" style="width:18px"><span>Sign</span>
+            </button>
+            <button id="verifyButton" onClick="verify()">
+                <img src="img/logo.svg" style="width:18px"><span>Verify</span>
+            </button>
+        </div>
+    </main>
+</body>
+
+</html>

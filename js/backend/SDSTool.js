@@ -282,7 +282,7 @@ class SDSTool {
     }
 
     //returns jsr with results (jsr must be valid: jsr = validateJsonSignRequest(obj,true))
-    async verifyJsonSignRequest(jsr) {
+    async verifyJsonSignRequest(jsr, verifyKeyId) {
         const inputBytes = typeof jsr.data === "string" ?
             stringToUtf8Bytes(jsr.data) :
             stringToUtf8Bytes(canonicalJsonStringify(jsr.data))
@@ -298,7 +298,7 @@ class SDSTool {
             delete x.illegalDigestMethod
 
             try {
-                const key = await this.deriveKeyFromKeyIdOrPublicKey(x)
+                const key = await this.deriveKeyFromKeyIdOrPublicKey(x, verifyKeyId)
                 const alg = AlgorithmNames.canonicalAlgorithmName(key.algorithm)
 
                 //remove private key since x might be shown to user (Show result as JSON)
@@ -450,7 +450,7 @@ class SDSTool {
     }
 
     //obj has field keyId or publicKey; returns key or throws error
-    async deriveKeyFromKeyIdOrPublicKey(obj) {
+    async deriveKeyFromKeyIdOrPublicKey(obj, verifyKeyId) {
         if(obj.publicKey !== undefined) {
             const pubKey = SDSTool.normalizePublicKey(obj.publicKey)
             const key1 = this.keyDatabase.getKeyByPublicKey(pubKey)
@@ -463,6 +463,11 @@ class SDSTool {
                 "algorithm": await this.deriveAlgorithmFromKey(pubKey)
             }
             if(key.algorithm === undefined) throw new DeriveKeyError(obj, "invalid public key")
+            if(verifyKeyId) {
+                if(obj.keyId !== undefined && obj.keyId !== key.keyId) 
+                    throw new DeriveKeyError(obj, "public key does not match keyId")
+            }
+            
             return key
         } else if(obj.keyId !== undefined) {
             if(obj.keyId.length === 43) {

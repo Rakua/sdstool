@@ -1,0 +1,123 @@
+<!--
+ Example of how to send sign and verify requests to SDSTool (plain text or 
+ JSON sign requests) and receive the signed result via postMessage.
+-->
+<!doctype html>
+
+<html>
+
+<head>
+    <title>Sign &amp; verify requests</title>
+
+    <script>
+        //use this to export classes and functions from sdst-request to window object
+        var exportSDSTRequest = true;
+    </script>
+    <script src="js/sdst-request.js" type="module"></script>
+
+    <script>
+        //send sign request
+        async function sign(noCallback) {
+            const cid = document.getElementById("contextId").value
+
+            const options = {
+                acceptedAlgorithms: ["secp256k1", "ed25519", "ed448", "xx"], //unknown algs are filtered by sdstool,
+                acceptedDigestMethods: ["sha512", "sha256"],
+                requirePublicKey: true,
+                contextId: cid == "" ? undefined : cid
+            }
+
+            if (noCallback === true) options.noCallback = true
+
+            const data = document.getElementById("signData").value
+            const sr = new SDSTSignRequest(data, options, sdstUrl())
+
+            const res = await sr.start()
+            console.info("sign request result", res)
+
+            if (noCallback === true) return
+            
+            if (res.signed === false) {
+                document.getElementById("signData").value = "User did not sign"
+            } else {
+                document.getElementById("signData").value = res.data
+            }
+            document.getElementById("contextId").value = res.contextId
+        }
+
+        //send verify request
+        function verify() {
+            const data = document.getElementById("signData").value
+            const vr = new SDSTVerifyRequest(data, sdstUrl())
+            vr.start()
+        }
+
+        function sdstUrl() {
+            return document.getElementById("sdstUrl").value == ""
+                ? undefined
+                : document.getElementById("sdstUrl").value
+        }
+    </script>
+    <style>
+        body {
+            text-align: center;
+        }
+
+        input {
+            width: 90%;
+            margin-bottom: 1em;
+        }
+
+        textarea {
+            width: 90%;
+            height: 10em;
+        }
+
+        #actions {
+            width: 90%;
+            margin: auto;
+            margin-top: 1em;
+            text-align: center;
+        }
+
+        button {
+            font-size: 1em;
+            margin-left: 1em;
+            margin-right: 1em;
+        }
+
+        button>img,
+        button>span {
+            vertical-align: middle;
+        }
+
+        button>img {
+            width:18px;
+        }
+    </style>
+</head>
+
+<body>
+    <input id="sdstUrl" type="text" placeholder="SDSTool URL (optional, default = https://sdstool.app)" list="sdstUrls"><br>
+    <input id="contextId" type="text" placeholder="contextId (optional)"><br>
+    <textarea id="signData" placeholder="Data to sign or verify (signData)"></textarea><br>
+    <div id="actions">
+        <button id="signButton" onClick="sign()">
+            <img src="img/logo.svg"><span>Sign</span>
+        </button>
+        <button id="signButtonWithoutCallback" onClick="sign(true)">
+            <img src="img/logo.svg"><span>Sign without callback</span>
+        </button>
+        <button id="verifyButton" onClick="verify()">
+            <img src="img/logo.svg"><span>Verify</span>
+        </button>
+    </div>
+
+    <datalist id="sdstUrls">
+        <option value="http://localhost:8045">http://localhost:8045</option>
+        <option value="https://sdstool.app">https://sdstool.app</option>
+        <option value="https://test.sdstool.pages.dev">https://test.sdstool.pages.dev</option>
+    </datalist>
+</body>
+
+</html>

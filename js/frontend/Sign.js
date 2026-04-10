@@ -7,7 +7,6 @@
     - show/hide error messages
 */
 
-
 GUI.initSign = function (sdsTool) {
     /*
         register event listener to update UI parts:
@@ -16,7 +15,7 @@ GUI.initSign = function (sdsTool) {
         GUI.signCustomRngSeed and GUI.signDigestMethodSelect
         (first signUpdateUI, then signCustomRngSeed/signDigestMethodSelect)
     */
-    
+
     $("#signData")[0].addEventListener("change", ev => GUI.autoFormatJson("#signData"))
     $("#signDataWrap")[0].addEventListener("change", ev => $("#signData")[0].classList.toggle("noLineWrap"))
     $("#settingsShowAdvancedOptions")[0].addEventListener("change", ev => {
@@ -24,35 +23,6 @@ GUI.initSign = function (sdsTool) {
             $("#signAdvancedOptions").show()
         } else {
             $("#signAdvancedOptions").hide()
-        }
-    })
-
-    $("#signCopyButton")[0].addEventListener("click", ev => {
-        if($("#signCopyButton")[0].hasAttribute("callback")) {
-            //send to callback url where sign request came from
-            const url = $("#signCopyButton")[0].getAttribute("callback")
-            let data = { signData: $("#signData")[0].value }
-
-            //add contextId if it exists
-            const contextId = $("#signCopyButton")[0].getAttribute("contextId")
-            if(contextId !== undefined && contextId !== null && contextId !== "") data.contextId = contextId
-
-            //window.location.assign(url + encodeURIComponent($("#signData")[0].value))
-            window.location.assign(url + encodeURIComponent(JSON.stringify(data)))
-        } else {
-            //copy to clipboard
-            let copyText = document.getElementById("signData");
-            copyText.select()
-            copyText.setSelectionRange(0, 99999)
-            navigator.clipboard.writeText(copyText.value)
-
-            $("#signCopyButton")[0].focus()
-            $("#signCopyButton")[0].innerText = 'Copied ✓'
-            $("#signCopyButton")[0].disabled = true
-            setTimeout(function () {
-                $("#signCopyButton")[0].innerText = 'Copy'
-                $("#signCopyButton")[0].disabled = false
-            }, 350)
         }
     })
 
@@ -82,15 +52,63 @@ GUI.initSign = function (sdsTool) {
     $("#signData")[0].addEventListener("change", ev => GUI.signDigestMethodSelect(sdsTool.keyDatabase))
 
     //set up sign button action
-    $("#signButton")[0].addEventListener("click", ev => {
+    $("#signButton")[0].addEventListener("click", async (ev) => {
         const data = $("#signData")[0].value
         const keyId = $("#signSigningKey")[0].value
         const digestMethod = $("#signDigestMethod")[0].value
         const rngSeedMaterial = $("#signRngSeed")[0].value
-        const signWithKeyId = Settings.getBoolSetting("settingsSignWithKeyId")
+        const signWithKeyId = !$("#signData")[0].hasAttribute("requirePublicKey") && Settings.getBoolSetting("settingsSignWithKeyId")
         const signAsPlainText = $("#signAsPlainText")[0].checked
 
-        GUI.sign(sdsTool, keyId, data, digestMethod, rngSeedMaterial, signWithKeyId, signAsPlainText)
+        await GUI.sign(sdsTool, keyId, data, digestMethod, rngSeedMaterial, signWithKeyId, signAsPlainText)
+
+        const req = GUI.getSignRequest()
+        if(req?.hostname != null) {
+            GUI.dontAskBeforeClosing()
+
+            const data = { signed: true, data: $("#signData")[0].value, contextId: req.contextId }
+            if(req.fromFragmentId === true) {
+                if(req.callback !== undefined) {
+                    //send data to callback url                    
+                    window.location.assign(req.callback + encodeURIComponent(JSON.stringify(data)))
+                }
+            } else {
+                //post data to origin                
+                window.opener.postMessage(data, req.origin)
+                window.close()
+            }
+        }
+    })
+
+    $("#signCopyButton")[0].addEventListener("click", ev => {
+        const req = GUI.getSignRequest()
+        if(req?.hostname != null) {
+            GUI.dontAskBeforeClosing()
+
+            const data = { signed: false, contextId: req.contextId }
+            if(req.callback !== undefined) {
+                //send user to callback url
+                window.location.assign(req.callback + encodeURIComponent(JSON.stringify(data)))
+            } else {
+                //just close this window                
+                window.opener.postMessage(data, req.origin)
+                window.close()
+            }
+        } else {
+            //copy to clipboard
+            let copyText = document.getElementById("signData");
+            copyText.select()
+            copyText.setSelectionRange(0, 99999)
+            navigator.clipboard.writeText(copyText.value)
+
+            $("#signCopyButton")[0].focus()
+            $("#signCopyButton")[0].innerText = 'Copied ✓'
+            $("#signCopyButton")[0].disabled = true
+            setTimeout(function () {
+                $("#signCopyButton")[0].innerText = 'Copy'
+                $("#signCopyButton")[0].disabled = false
+            }, 350)
+        }
     })
 
     //init UI
@@ -167,43 +185,45 @@ GUI.sign = async function (sdsTool, keyId, data, digestMethod, rngSeedMaterial, 
 }
 
 GUI.signUpdateUI = function (sdsTool, event) {
-    const button = $("#signButton")[0]
+    const req = GUI.getSignRequest()
+    const signButton = $("#signButton")[0]
+    const copyButton = $("#signCopyButton")[0]
 
     if(event !== "signSigningKey") {
-        //reset UI
-        button.innerText = "Sign"
-        button.removeAttribute("requestedKeys")
-        button.removeAttribute("showDmSelect")
-        button.removeAttribute("showRngSeed")
+        if(req?.hostname != null) {
+            try {
+                const signFor = SDSTSignRequest.signFor(req)
+                $("#signDataSignFor")[0].innerHTML = " for <span style='color:var(--linkColor)'>" + signFor + "</span>"
+                //$("#labelSignData")[0].innerHTML = "Data to sign for <span style='color:var(--linkColor)'>" + signFor + "</span>"
+                signButton.innerText = "Sign & send"
+                copyButton.innerText = "Cancel & back"
+            } catch(e) {
+                console.error("Callback URL or rootOrigin of sign request %O invalid: %O", req, e)
+                GUI.blockingInfo("Callback URL or rootOrigin of sign request invalid. See browser console for more information.")
+            }
+        }
+
+        signButton.removeAttribute("requestedKeys")
+        signButton.removeAttribute("showDmSelect")
+        signButton.removeAttribute("showRngSeed")
         $("#signSigningKey").parent().show() //show signing key select
         $("label[for='signData'] > .error").hide() //hide all error labels    
 
         const signAsPlainText = $("#signAsPlainText")[0].checked
         const jsonObj = (function () {
             try {
-                return { "res": JSON.parse($("#signData")[0].value) }
+                const val = JSON.parse($("#signData")[0].value)
+                return typeof val == "object" && val !== null
+                    ? { "res": val } : { "err": "not a non-null object" }
             } catch(e) {
                 return { "err": e }
             }
         })()
 
         if(signAsPlainText || jsonObj.err !== undefined) {
-            //Accepted algorithms and digest methods for plain text 
-            //can be specified via attributes attached to #signData.
-            //This is used for plain text sign requests from other websites
-            const sd = $("#signData")[0]
-            if(sd.hasAttribute("acceptedAlgorithms")) {
-                const acceptedAlgs = sd.getAttribute("acceptedAlgorithms").split(";")
-                GUI.signPopulateSigningKey(sdsTool.keyDatabase, acceptedAlgs)
-            } else {
-                GUI.signPopulateSigningKey(sdsTool.keyDatabase)
-            }
-            if(sd.hasAttribute("acceptedDigestMethods")) {
-                const acceptedDMs = sd.getAttribute("acceptedDigestMethods").split(";")
-                GUI.signPopulateDigestMethod(acceptedDMs)
-            } else {
-                GUI.signPopulateDigestMethod()
-            }
+            //accepted algorithms and digest methods for plain text               
+            GUI.signPopulateSigningKey(sdsTool.keyDatabase, req?.acceptedAlgorithms)
+            GUI.signPopulateDigestMethod(req?.acceptedDigestMethods)
         } else {
             //data to sign is valid json string
             try {
@@ -220,7 +240,6 @@ GUI.signUpdateUI = function (sdsTool, event) {
                         GUI.signPopulateDigestMethod([SDSTool.defaultDigestMethod()])
                     }
                 }
-
             } catch(e) {
                 //invalid json sr
                 console.error(e)
@@ -232,7 +251,7 @@ GUI.signUpdateUI = function (sdsTool, event) {
         }
     }
 
-    button.disabled = GUI.signingNotPossible(sdsTool)
+    signButton.disabled = GUI.signingNotPossible(sdsTool)
 }
 
 GUI.signingNotPossible = function (sdsTool) {
@@ -292,8 +311,9 @@ GUI.signPopulateSigningKey = function (keyDatabase, acceptedAlgorithms, requestF
 
         return
     }
-
+    
     //JSON sign request with accepted algorithms field or plain text 
+    button.innerText = "Sign"
     const legalAlgorithms = acceptedAlgorithms === undefined ?
         AlgorithmNames.supportedAlgorithms() :
         acceptedAlgorithms.map(AlgorithmNames.canonicalAlgorithmName).filter(x => x !== undefined)
@@ -304,7 +324,7 @@ GUI.signPopulateSigningKey = function (keyDatabase, acceptedAlgorithms, requestF
         if(acceptedAlgorithms === undefined) {
             sel.innerHTML = "<option value=''>No key pairs exist, generate or add one first</option>"
         } else {
-            sel.innerHTML = "<option value=''>No key pair with algorithm accepted by JSON sign request exist</option>"
+            sel.innerHTML = "<option value=''>No key pair with algorithm accepted by sign request exist</option>"
             $("#signErrNoAcceptedKey").show()
         }
     } else {
@@ -405,4 +425,10 @@ GUI.signCustomRngSeed = function (keyDatabase) {
     } else {
         $("#signRngSeed").parent().show()
     }
+}
+
+GUI.getSignRequest = function () {
+    const r = $("#sign")[0].getAttribute("request")
+    if(r == null) return undefined
+    return JSON.parse(r)
 }
