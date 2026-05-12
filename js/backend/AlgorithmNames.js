@@ -27,11 +27,10 @@ class AlgorithmNames {
     }
 
     //returns intersection of acceptedAlgs and supported algorithms (sorted & canonized)
-    static acceptedAlgorithms(acceptedAlgs) {
+    static acceptedAlgorithms(acceptedAlgs) {    
         let x = acceptedAlgs
-            .map(AlgorithmNames.normalizeAlgorithmName)
-            .filter(x => AlgorithmNames.supportedAlgorithms().includes(x))
             .map(AlgorithmNames.canonicalAlgorithmName)
+            .filter(x => AlgorithmNames.supportedAlgorithms().includes(x))
         x.sort()
         return x
     }
@@ -39,9 +38,8 @@ class AlgorithmNames {
     //returns intersection of acceptedDms and supported digest methods (sorted & canonized)
     static acceptedDigestMethods(acceptedDms) {
         let x = acceptedDms
-            .map(AlgorithmNames.normalizeAlgorithmName)
-            .filter(x => AlgorithmNames.supportedDigestMethods().includes(x))
             .map(AlgorithmNames.canonicalDigestMethodName)
+            .filter(x => AlgorithmNames.supportedDigestMethods().includes(x))
         x.sort()
         return x
     }

@@ -1,4 +1,4 @@
-const sdstVersion = "1.0.1" //2026/04/10
+const sdstVersion = "1.0.2" //2026-05-08
 
 redirect() //redirect sign/verify requests to user's self-hosted instance of SDSTool 
 
@@ -53,7 +53,6 @@ function redirect() {
  */
 function getRequest() {
     if(isPostRequest()) {
-
         //wait for post request
         const onMessage = (ev, resolve) => resolve({
             ...ev.data,

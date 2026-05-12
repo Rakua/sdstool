@@ -198,6 +198,8 @@ GUI.loadDatabaseFromString = async function (dbName, kdbString, password, fromSt
         GUI.updateDataseInStorageDisplay()
         res = true
     } catch(e) {
+        if(e instanceof WrongDbPasswordError) GUI.setPassword("")
+
         const errMsg = fromStorage === true ?
             "Failed to load database '" + dbName + "' because:\n" + e.message :
             "Failed to load database from file '" + dbName + "' because:\n" + e.message
@@ -446,7 +448,7 @@ GUI.closePasswordPrompt = function (ok, pwChanged, state, callback) {
 }
 
 GUI.setPassword = function (pw) {
-    $("#dbPassword")[0].value = ""
+    $("#dbPassword")[0].value = pw
 
     const noPassword = GUI.getDatabasePassword() === null
     GUI.updateDatabasePasswordButton()

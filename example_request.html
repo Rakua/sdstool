@@ -21,7 +21,7 @@
             const cid = document.getElementById("contextId").value
 
             const options = {
-                acceptedAlgorithms: ["secp256k1", "ed25519", "ed448", "xx"], //unknown algs are filtered by sdstool,
+                acceptedAlgorithms: ["secp256k1", "ed25519", "ed448", "brainpoolP256r1", "xx"], //unknown algs are filtered by sdstool
                 acceptedDigestMethods: ["sha512", "sha256"],
                 requirePublicKey: true,
                 contextId: cid == "" ? undefined : cid

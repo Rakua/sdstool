@@ -219,7 +219,7 @@ class GUI {
         try {
             const req = await getRequest()
             if(req === undefined) return //no request
-            console.info("sign/verify request:", req)
+            console.info("sign/verify request:", JSON.stringify(req))
 
             if(req.type == "sign") {
                 if(ru == null || ru == "") {

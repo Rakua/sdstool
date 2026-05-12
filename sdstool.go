@@ -7,10 +7,10 @@ import (
 	"os"
 )
 
-const sdstVersion = "1.0.1"
+const sdstVersion = "1.0.2"
 const defaultPort = "8045"
 const devMode = false // set to true to enable loading files from file system (hot reload)
-const mark = "2026/04/10"
+const mark = "2026-05-08"
 
 const help = `SDSTool version ` + sdstVersion + `, usage:
 sdstool       - starts webserver listening on localhost:8045

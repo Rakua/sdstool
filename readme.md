@@ -32,7 +32,7 @@ A digest method can be chosen when signing with ECDSA or RSA (needs to be enable
 * Open http://localhost:8045 in your browser
 
 For development mode set `devMode` in `sdstool.go` to true and run `go run sdstool.go $PORT`
-where `$PORT` is the port the webserver should listen to (if omitted the port 8045 is taken).  
+where `$PORT` is the port the webserver should listen to (if omitted the port 8045 is used).  
 
 ## Dependencies
 
