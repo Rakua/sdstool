@@ -8,9 +8,9 @@ It uses OpenSSL via WebAssembly to perform cryptographic operations.
 
 Download offline version (self-hosted):
 
-- Windows: [sdstool-windows-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.1/sdstool-windows-amd64.zip)
-- Linux: [sdstool-linux-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.1/sdstool-linux-amd64.zip)
-- macOS: [sdstool-darwin-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.1/sdstool-darwin-amd64.zip)
+- Windows: [sdstool-windows-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.2/sdstool-windows-amd64.zip)
+- Linux: [sdstool-linux-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.2/sdstool-linux-amd64.zip)
+- macOS: [sdstool-darwin-amd64.zip](https://github.com/Rakua/sdstool/releases/download/v1.0.2/sdstool-darwin-amd64.zip)
 
 The following algorithms are supported:
 
